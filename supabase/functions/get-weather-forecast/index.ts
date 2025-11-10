@@ -36,7 +36,7 @@ Deno.serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const weatherApiKey = Deno.env.get('WEATHER_API_KEY');
+    const weatherApiKey = Deno.env.get('OPENWEATHER_API_KEY');
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -108,13 +108,31 @@ Deno.serve(async (req: Request) => {
       try {
         const daysFromNow = Math.ceil((new Date(forecastDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-        if (daysFromNow > 14) {
+        if (daysFromNow < 0 || daysFromNow > 7) {
           const mockForecast = generateMockForecast(forecastDate, destination);
           forecastDays.push(mockForecast);
           continue;
         }
 
-        const weatherUrl = `https://api.weatherapi.com/v1/forecast.json?key=${weatherApiKey}&q=${encodeURIComponent(destination)}&dt=${forecastDate}&aqi=no`;
+        const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(destination)}&limit=1&appid=${weatherApiKey}`;
+        const geoResponse = await fetch(geoUrl);
+
+        if (!geoResponse.ok) {
+          const mockForecast = generateMockForecast(forecastDate, destination);
+          forecastDays.push(mockForecast);
+          continue;
+        }
+
+        const geoData = await geoResponse.json();
+        if (!geoData || geoData.length === 0) {
+          const mockForecast = generateMockForecast(forecastDate, destination);
+          forecastDays.push(mockForecast);
+          continue;
+        }
+
+        const { lat, lon } = geoData[0];
+
+        const weatherUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${weatherApiKey}`;
         const weatherResponse = await fetch(weatherUrl);
 
         if (!weatherResponse.ok) {
@@ -124,27 +142,55 @@ Deno.serve(async (req: Request) => {
         }
 
         const weatherData = await weatherResponse.json();
-        const dayForecast = weatherData.forecast.forecastday[0].day;
+
+        const dayForecasts = weatherData.list.filter((item: any) => {
+          const itemDate = new Date(item.dt * 1000).toISOString().split('T')[0];
+          return itemDate === forecastDate;
+        });
+
+        if (dayForecasts.length === 0) {
+          const mockForecast = generateMockForecast(forecastDate, destination);
+          forecastDays.push(mockForecast);
+          continue;
+        }
+
+        const temps = dayForecasts.map((f: any) => f.main.temp);
+        const tempMax = Math.round(Math.max(...temps));
+        const tempMin = Math.round(Math.min(...temps));
+
+        const humidities = dayForecasts.map((f: any) => f.main.humidity);
+        const avgHumidity = Math.round(humidities.reduce((a: number, b: number) => a + b, 0) / humidities.length);
+
+        const windSpeeds = dayForecasts.map((f: any) => f.wind.speed);
+        const maxWindSpeed = Math.round(Math.max(...windSpeeds) * 3.6);
+
+        const rainForecasts = dayForecasts.filter((f: any) => f.weather[0].main.toLowerCase().includes('rain'));
+        const precipProb = Math.round((rainForecasts.length / dayForecasts.length) * 100);
+
+        const midDayForecast = dayForecasts[Math.floor(dayForecasts.length / 2)];
+        const weatherCondition = midDayForecast.weather[0].main;
+        const weatherDescription = midDayForecast.weather[0].description;
+        const weatherIcon = midDayForecast.weather[0].icon;
 
         const forecast: WeatherForecast = {
           date: forecastDate,
-          temperatureMax: Math.round(dayForecast.maxtemp_c),
-          temperatureMin: Math.round(dayForecast.mintemp_c),
-          condition: dayForecast.condition.text,
-          description: dayForecast.condition.text,
-          icon: dayForecast.condition.code.toString(),
-          precipitationProbability: Math.round(dayForecast.daily_chance_of_rain),
-          humidity: Math.round(dayForecast.avghumidity),
-          windSpeed: Math.round(dayForecast.maxwind_kph),
+          temperatureMax: tempMax,
+          temperatureMin: tempMin,
+          condition: weatherCondition,
+          description: weatherDescription.charAt(0).toUpperCase() + weatherDescription.slice(1),
+          icon: weatherIcon,
+          precipitationProbability: precipProb,
+          humidity: avgHumidity,
+          windSpeed: maxWindSpeed,
         };
 
         forecastDays.push(forecast);
 
         await supabase.from('weather_forecasts').insert({
           location: destination,
-          country: weatherData.location.country,
-          latitude: weatherData.location.lat,
-          longitude: weatherData.location.lon,
+          country: geoData[0].country || country || 'Unknown',
+          latitude: lat,
+          longitude: lon,
           forecast_date: forecastDate,
           temperature_max: forecast.temperatureMax,
           temperature_min: forecast.temperatureMin,
@@ -188,10 +234,10 @@ function generateMockForecast(date: string, destination: string): WeatherForecas
   const normalized = random / 233280;
 
   const conditions = [
-    { condition: 'Sunny', description: 'Clear sunny day', icon: '1000' },
-    { condition: 'Partly Cloudy', description: 'Partly cloudy skies', icon: '1003' },
-    { condition: 'Cloudy', description: 'Overcast conditions', icon: '1006' },
-    { condition: 'Light Rain', description: 'Light rain showers', icon: '1063' },
+    { condition: 'Clear', description: 'Clear sunny day', icon: '01d' },
+    { condition: 'Clouds', description: 'Partly cloudy skies', icon: '03d' },
+    { condition: 'Clouds', description: 'Overcast conditions', icon: '04d' },
+    { condition: 'Rain', description: 'Light rain showers', icon: '10d' },
   ];
 
   const selectedCondition = conditions[Math.floor(normalized * conditions.length)];
