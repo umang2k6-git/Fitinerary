@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Heart, Share2, Sparkles, MapPin, Clock, DollarSign, ChevronLeft } from 'lucide-react';
+import ExportShareModal from '../components/ExportShareModal';
 
 interface Activity {
   timeOfDay: string;
@@ -40,6 +41,7 @@ export default function ItineraryDetail() {
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [showConversation, setShowConversation] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -76,6 +78,76 @@ export default function ItineraryDetail() {
 
   const generateActivityHash = (activity: Activity, destination: string) => {
     return `${activity.name}-${activity.venue}-${activity.location}-${destination}`.toLowerCase().replace(/\s+/g, '-');
+  };
+
+  const getActivityTypeForImage = (activity: Activity) => {
+    const name = activity.name.toLowerCase();
+    const venue = activity.venue.toLowerCase();
+    const description = activity.description.toLowerCase();
+
+    if (name.includes('museum') || venue.includes('museum') || name.includes('gallery')) {
+      return 'museum';
+    } else if (name.includes('food') || name.includes('dining') || name.includes('restaurant') || venue.includes('restaurant')) {
+      return 'food';
+    } else if (name.includes('nature') || name.includes('park') || name.includes('garden') || name.includes('beach')) {
+      return 'nature';
+    } else if (name.includes('market') || name.includes('shopping') || name.includes('bazaar')) {
+      return 'market';
+    } else if (name.includes('temple') || name.includes('church') || name.includes('palace') || description.includes('historic')) {
+      return 'architecture';
+    } else if (name.includes('spa') || name.includes('wellness') || name.includes('massage')) {
+      return 'spa';
+    } else if (name.includes('adventure') || name.includes('sports') || name.includes('hiking')) {
+      return 'adventure';
+    } else if (name.includes('cruise') || name.includes('yacht') || name.includes('boat')) {
+      return 'cruise';
+    }
+    return 'travel';
+  };
+
+  const getPexelsPlaceholder = (activity: Activity): string[] => {
+    const activityType = getActivityTypeForImage(activity);
+
+    const imageMap: Record<string, string[]> = {
+      museum: [
+        'https://images.pexels.com/photos/2883049/pexels-photo-2883049.jpeg?auto=compress&cs=tinysrgb&w=400',
+        'https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg?auto=compress&cs=tinysrgb&w=400'
+      ],
+      food: [
+        'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+        'https://images.pexels.com/photos/1199957/pexels-photo-1199957.jpeg?auto=compress&cs=tinysrgb&w=400'
+      ],
+      nature: [
+        'https://images.pexels.com/photos/1054218/pexels-photo-1054218.jpeg?auto=compress&cs=tinysrgb&w=400',
+        'https://images.pexels.com/photos/1770809/pexels-photo-1770809.jpeg?auto=compress&cs=tinysrgb&w=400'
+      ],
+      market: [
+        'https://images.pexels.com/photos/2291599/pexels-photo-2291599.jpeg?auto=compress&cs=tinysrgb&w=400',
+        'https://images.pexels.com/photos/1134982/pexels-photo-1134982.jpeg?auto=compress&cs=tinysrgb&w=400'
+      ],
+      architecture: [
+        'https://images.pexels.com/photos/2166711/pexels-photo-2166711.jpeg?auto=compress&cs=tinysrgb&w=400',
+        'https://images.pexels.com/photos/1542495/pexels-photo-1542495.jpeg?auto=compress&cs=tinysrgb&w=400'
+      ],
+      spa: [
+        'https://images.pexels.com/photos/3757942/pexels-photo-3757942.jpeg?auto=compress&cs=tinysrgb&w=400',
+        'https://images.pexels.com/photos/3997992/pexels-photo-3997992.jpeg?auto=compress&cs=tinysrgb&w=400'
+      ],
+      adventure: [
+        'https://images.pexels.com/photos/2422265/pexels-photo-2422265.jpeg?auto=compress&cs=tinysrgb&w=400',
+        'https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg?auto=compress&cs=tinysrgb&w=400'
+      ],
+      cruise: [
+        'https://images.pexels.com/photos/1549024/pexels-photo-1549024.jpeg?auto=compress&cs=tinysrgb&w=400',
+        'https://images.pexels.com/photos/2166927/pexels-photo-2166927.jpeg?auto=compress&cs=tinysrgb&w=400'
+      ],
+      travel: [
+        'https://images.pexels.com/photos/1008155/pexels-photo-1008155.jpeg?auto=compress&cs=tinysrgb&w=400',
+        'https://images.pexels.com/photos/1457841/pexels-photo-1457841.jpeg?auto=compress&cs=tinysrgb&w=400'
+      ]
+    };
+
+    return imageMap[activityType] || imageMap.travel;
   };
 
   const loadActivityImages = async (activity: Activity, destination: string) => {
@@ -130,11 +202,19 @@ export default function ItineraryDetail() {
               });
 
             updateActivityImages(activityHash, images);
+          } else {
+            // Use Pexels placeholder if no images generated
+            updateActivityImages(activityHash, getPexelsPlaceholder(activity));
           }
+        } else {
+          // Use Pexels placeholder if request failed
+          updateActivityImages(activityHash, getPexelsPlaceholder(activity));
         }
       }
     } catch (error) {
       console.error('Error loading activity images:', error);
+      // Use Pexels placeholder on error
+      updateActivityImages(activityHash, getPexelsPlaceholder(activity));
     } finally {
       setLoadingImages(prev => ({ ...prev, [activityHash]: false }));
     }
@@ -276,7 +356,10 @@ export default function ItineraryDetail() {
             Refine It
           </button>
 
-          <button className="px-6 py-3 rounded-full border-2 border-luxury-orange text-luxury-orange font-medium flex items-center gap-2 hover:bg-luxury-orange hover:text-white transition-all duration-300">
+          <button
+            onClick={() => setShowExportModal(true)}
+            className="px-6 py-3 rounded-full border-2 border-luxury-orange text-luxury-orange font-medium flex items-center gap-2 hover:bg-luxury-orange hover:text-white transition-all duration-300"
+          >
             <Share2 className="w-5 h-5" />
             Export & Share
           </button>
@@ -365,6 +448,13 @@ export default function ItineraryDetail() {
           ))}
         </div>
       </div>
+
+      {showExportModal && (
+        <ExportShareModal
+          itinerary={itinerary}
+          onClose={() => setShowExportModal(false)}
+        />
+      )}
 
       {showConversation && (
         <div className="fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-float z-50 animate-slide-in-right">

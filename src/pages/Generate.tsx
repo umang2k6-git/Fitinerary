@@ -5,6 +5,7 @@ import { useGuestItinerary } from '../contexts/GuestItineraryContext';
 import { supabase } from '../lib/supabase';
 import { Sparkles, DollarSign, CheckCircle, RefreshCw } from 'lucide-react';
 import SignupPrompt from '../components/SignupPrompt';
+import TravelTriviaCard from '../components/TravelTriviaCard';
 
 interface Tier {
   id: string;
@@ -433,14 +434,16 @@ export default function Generate() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-luxury-charcoal via-gray-900 to-luxury-charcoal flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-gradient-to-br from-luxury-charcoal via-gray-900 to-luxury-charcoal flex items-center justify-center px-6">
+        <div className="text-center max-w-4xl w-full">
           <div className="relative">
             <div className="animate-spin rounded-full h-20 w-20 border-4 border-luxury-teal border-t-transparent mx-auto mb-6"></div>
             <Sparkles className="w-8 h-8 text-luxury-orange absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
           </div>
           <p className="text-white text-xl font-light mb-2">Crafting your perfect plans...</p>
-          <p className="text-white/60">This takes about 30 seconds</p>
+          <p className="text-white/60 mb-8">This takes about 30 seconds</p>
+
+          <TravelTriviaCard />
         </div>
       </div>
     );
