@@ -6,6 +6,7 @@ import { MapPin, DollarSign, TrendingUp, Loader2, ArrowRight, Calendar, Users } 
 
 interface Destination {
   name: string;
+  country: string;
   state: string;
   description: string;
   estimatedBudget: number;
@@ -174,7 +175,9 @@ export default function PersonalizedDestinations() {
                     <h3 className="text-2xl font-bold text-gray-900 mb-1 group-hover:text-luxury-teal transition-colors">
                       {destination.name}
                     </h3>
-                    <p className="text-gray-500 text-sm">{destination.state}</p>
+                    <p className="text-gray-500 text-sm">
+                      {destination.state}, {destination.country}
+                    </p>
                   </div>
                   <div className="flex items-center gap-1 bg-luxury-teal/10 px-3 py-1 rounded-full">
                     <TrendingUp className="w-4 h-4 text-luxury-teal" />

@@ -48,7 +48,7 @@ Deno.serve(async (req: Request) => {
       (new Date(profile.trip_end_date).getTime() - new Date(profile.trip_start_date).getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    const prompt = `You are a travel expert. Based on the following user preferences, suggest 6 diverse weekend getaway destinations in India that perfectly match their criteria. Consider both popular and hidden gems.
+    const prompt = `You are a travel expert. Based on the following user preferences, suggest 6 diverse destinations (both within India and international) that perfectly match their criteria. Consider both popular destinations and hidden gems. Include a good mix of domestic and international options based on their budget.
 
 User Preferences:
 - Start City: ${profile.start_city}
@@ -65,26 +65,28 @@ ${profile.accessibility_requirements ? `- Accessibility Needs: ${profile.accessi
 
 For each destination, provide:
 1. Name (city/place name)
-2. State in India
-3. Brief description (2-3 sentences highlighting why it matches their preferences)
-4. Estimated budget for the trip
-5. Best suited for (activity types that match their interests)
-6. Distance from their start city (approximate)
+2. Country (e.g., India, Thailand, UAE, etc.)
+3. State/Region (for India, provide state; for international, provide region/province)
+4. Brief description (2-3 sentences highlighting why it matches their preferences)
+5. Estimated budget for the trip including flights/transport
+6. Best suited for (activity types that match their interests)
+7. Approximate travel distance/time from their start city
 
 Return ONLY a valid JSON array with 6 destinations in this exact format:
 [
   {
     "name": "Destination Name",
-    "state": "State Name",
+    "country": "Country Name",
+    "state": "State/Region Name",
     "description": "Brief description",
     "estimatedBudget": 50000,
     "bestFor": ["Activity 1", "Activity 2", "Activity 3"],
-    "distanceFromStart": "XXX km",
+    "distanceFromStart": "XXX km / X hours flight",
     "matchScore": 95
   }
 ]
 
-Ensure destinations are diverse, realistic, and truly match the user's preferences and budget. Match score should be 0-100 based on how well it fits.`;
+Ensure destinations are diverse (mix of Indian and international), realistic, and truly match the user's preferences and budget. Consider flight costs for international destinations. Match score should be 0-100 based on how well it fits.`;
 
     const openAIResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -95,7 +97,7 @@ Ensure destinations are diverse, realistic, and truly match the user's preferenc
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "You are a travel expert specializing in Indian destinations. Always respond with valid JSON only, no markdown or explanations." },
+          { role: "system", content: "You are a travel expert specializing in Indian and international destinations. Always respond with valid JSON only, no markdown or explanations." },
           { role: "user", content: prompt }
         ],
         temperature: 0.8,
