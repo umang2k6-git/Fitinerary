@@ -26,7 +26,7 @@ export default function Generate() {
   const [error, setError] = useState('');
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
 
-  const { destination, tripBrief, destinationImageUrl } = location.state || {};
+  const { destination, tripBrief, destinationImageUrl, useProfile } = location.state || {};
 
   useEffect(() => {
     if (!destination) {
@@ -70,6 +70,7 @@ export default function Generate() {
             tripBrief: tripBrief || 'A perfect weekend getaway',
             destinationImageUrl,
             isGuest: !user,
+            useProfile: useProfile || false,
           }),
           signal: controller.signal,
         });

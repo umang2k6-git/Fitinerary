@@ -14,6 +14,7 @@ import ItineraryDetail from './pages/ItineraryDetail';
 import MyItineraries from './pages/MyItineraries';
 import QuickItinerary from './pages/QuickItinerary';
 import Discovery from './pages/Discovery';
+import PersonalizedDestinations from './pages/PersonalizedDestinations';
 
 function App() {
   return (
@@ -36,6 +37,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Discovery />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/personalized-destinations"
+                element={
+                  <ProtectedRoute>
+                    <PersonalizedDestinations />
                   </ProtectedRoute>
                 }
               />

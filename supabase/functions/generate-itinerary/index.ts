@@ -12,6 +12,7 @@ interface GenerateRequest {
   tripBrief: string;
   destinationImageUrl?: string;
   isGuest?: boolean;
+  useProfile?: boolean;
 }
 
 interface UserProfile {
@@ -36,7 +37,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { destination, tripBrief, destinationImageUrl, isGuest }: GenerateRequest = await req.json();
+    const { destination, tripBrief, destinationImageUrl, isGuest, useProfile }: GenerateRequest = await req.json();
 
     const authHeader = req.headers.get("Authorization");
 
@@ -49,7 +50,7 @@ Deno.serve(async (req: Request) => {
     let user = null;
     let supabaseClient = null;
 
-    if (!isGuest && authHeader) {
+    if (!isGuest && authHeader && useProfile) {
       supabaseClient = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
         Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -132,47 +133,39 @@ Deno.serve(async (req: Request) => {
         prompt += `\n- Accessibility requirements: ${userProfile.accessibility_requirements}`;
       }
 
-      prompt += `\n\nIMPORTANT:
-- Personalize ALL activities to match the traveler's interests and preferences
-- For couples, include romantic venues and experiences
-- For families, ensure all activities are child-friendly and engaging for all ages
-- For solo travelers, include opportunities for social interaction and self-discovery
-- Adjust activity pacing according to their preferred travel pace
-- Match accommodation and dining suggestions to their stated preferences
-- Incorporate their special interests throughout the itinerary`;
-    } else if (tripBrief) {
-      prompt += `\n\nTraveler notes: "${tripBrief}"`;
+      prompt += `\n\nTailor each tier to these specific preferences.`;
+    } else {
+      prompt += `\n\nTrip context: ${tripBrief}`;
     }
 
-    prompt += `\n\nFor each tier (Budget, Balanced, Luxe), provide:
-- A different style of experience matching the budget level
-- Specific venue names, not generic descriptions
-- Realistic timing and costs
-- Activities that match the traveler's stated preferences${userProfile ? ' and profile' : ''}
+    prompt += `\n\nFor each tier (Budget, Balanced, Premium), provide:
+1. Comprehensive 2-day itinerary with Day 1 and Day 2 schedules
+2. Time-slot activities from morning to night
+3. Specific venue/attraction names and brief descriptions
+4. Estimated costs in INR
+5. Accommodation and dining details appropriate for the tier
 
-Return ONLY valid JSON in this exact structure:
+Return ONLY a valid JSON object in this exact format:
 {
   "tiers": [
     {
-      "name": "Budget",
-      "description": "Smart spending, big experiences",
+      "id": "budget",
+      "name": "Budget Explorer",
+      "description": "Affordable experiences without compromising on fun",
       "totalCost": 8000,
-      "accommodation": "Boutique guesthouses",
-      "dining": "Local eateries & street food",
+      "accommodation": "Comfortable hostel or budget hotel",
+      "dining": "Local eateries and street food",
       "days": [
         {
           "day": 1,
-          "date": "Saturday",
+          "title": "Day 1: Arrival & Exploration",
           "activities": [
             {
-              "timeOfDay": "Morning",
-              "time": "9:00 AM",
-              "name": "Activity name",
-              "venue": "Specific venue name",
-              "location": "Area/neighborhood",
-              "description": "What you'll experience",
-              "duration": "2 hours",
-              "cost": 500
+              "time": "09:00 AM",
+              "title": "Breakfast at Local Cafe",
+              "description": "Start with authentic local breakfast",
+              "cost": 200,
+              "location": "City Center"
             }
           ]
         }
@@ -181,95 +174,115 @@ Return ONLY valid JSON in this exact structure:
   ]
 }
 
-`;
+Ensure all costs are realistic for Indian destinations and activities are practical and achievable.`;
 
-    if (userProfile) {
-      const budgetRange = Math.round((userProfile.budget_min + userProfile.budget_max) / 2);
-      prompt += `Adjust tier pricing based on user's budget preference (₹${userProfile.budget_min.toLocaleString()} - ₹${userProfile.budget_max.toLocaleString()}):\n`;
-      prompt += `- Budget tier: Around ₹${Math.round(budgetRange * 0.4).toLocaleString()}\n`;
-      prompt += `- Balanced tier: Around ₹${Math.round(budgetRange * 0.7).toLocaleString()}\n`;
-      prompt += `- Luxe tier: Around ₹${Math.round(budgetRange * 1.2).toLocaleString()}\n`;
-    } else {
-      prompt += `Ensure Budget is ₹6,000-10,000, Balanced is ₹15,000-25,000, Luxe is ₹40,000+.\n`;
-    }
-
-    prompt += `Include Morning, Afternoon, and Evening activities for each day.`;
-
-    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        "Authorization": `Bearer ${openaiApiKey}`,
-        "Content-Type": "application/json",
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-4-turbo-preview",
+        model: 'gpt-4o-mini',
         messages: [
-          { role: "system", content: "You are a luxury travel planning assistant. Always respond with valid JSON only. Personalize itineraries based on the traveler profile provided." },
-          { role: "user", content: prompt }
+          {
+            role: 'system',
+            content: 'You are an expert travel planner. Always respond with valid JSON only, no markdown or explanations.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
         ],
-        temperature: 0.8,
-        response_format: { type: "json_object" }
+        temperature: 0.7,
+        max_tokens: 3000,
       }),
     });
 
-    if (!openaiResponse.ok) {
-      const error = await openaiResponse.text();
-      throw new Error(`OpenAI API error: ${error}`);
+    if (!openAIResponse.ok) {
+      const errorText = await openAIResponse.text();
+      throw new Error(`OpenAI API error: ${errorText}`);
     }
 
-    const openaiData = await openaiResponse.json();
-    const itineraryData = JSON.parse(openaiData.choices[0].message.content);
+    const openAIData = await openAIResponse.json();
+    let itineraryData;
 
-    if (isGuest || !user || !supabaseClient) {
-      return new Response(
-        JSON.stringify({ tiers: itineraryData.tiers }),
-        {
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
+    try {
+      const content = openAIData.choices[0].message.content;
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        itineraryData = JSON.parse(jsonMatch[0]);
+      } else {
+        itineraryData = JSON.parse(content);
+      }
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response:', openAIData.choices[0].message.content);
+      throw new Error('Failed to parse itinerary data');
+    }
+
+    if (user && supabaseClient && !isGuest) {
+      try {
+        for (const tier of itineraryData.tiers) {
+          const { data: existingItinerary } = await supabaseClient
+            .from('itineraries')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('destination', destination)
+            .eq('tier', tier.name)
+            .maybeSingle();
+
+          if (existingItinerary) {
+            await supabaseClient
+              .from('itineraries')
+              .update({
+                days_json: tier.days,
+                total_cost: tier.totalCost,
+                destination_hero_image_url: destinationImageUrl,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', existingItinerary.id);
+
+            tier.id = existingItinerary.id;
+          } else {
+            const { data: newItinerary } = await supabaseClient
+              .from('itineraries')
+              .insert({
+                user_id: user.id,
+                destination,
+                destination_hero_image_url: destinationImageUrl,
+                tier: tier.name,
+                days_json: tier.days,
+                total_cost: tier.totalCost,
+              })
+              .select('id')
+              .single();
+
+            tier.id = newItinerary?.id;
+          }
         }
-      );
-    }
-
-    const savedItineraries = [];
-    for (const tier of itineraryData.tiers) {
-      const { data: savedItinerary, error: saveError } = await supabaseClient
-        .from("itineraries")
-        .insert({
-          user_id: user.id,
-          destination,
-          destination_hero_image_url: destinationImageUrl || null,
-          trip_brief: tripBrief,
-          tier: tier.name,
-          days_json: tier.days,
-          total_cost: tier.totalCost,
-          duration_days: 2,
-        })
-        .select()
-        .single();
-
-      if (saveError) throw saveError;
-      savedItineraries.push({ ...tier, id: savedItinerary.id });
+      } catch (dbError) {
+        console.error('Database error:', dbError);
+      }
     }
 
     return new Response(
-      JSON.stringify({ tiers: savedItineraries }),
+      JSON.stringify(itineraryData),
       {
         headers: {
           ...corsHeaders,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       }
     );
   } catch (error) {
+    console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
         status: 500,
         headers: {
           ...corsHeaders,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       }
     );
