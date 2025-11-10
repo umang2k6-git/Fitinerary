@@ -73,42 +73,6 @@ export default function ValueProposition() {
           })}
         </div>
 
-        <div className="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <h3 className="text-3xl font-light text-luxury-charcoal" style={{ letterSpacing: '-0.02em' }}>
-              About Travel
-            </h3>
-            <p className="text-gray-600 leading-relaxed">
-              It encourages exploration of unfamiliar territories, embracing diverse cultures and landscapes, while pursuing the desired destination that captivates the heart and ignites a sense of wonder.
-            </p>
-            <p className="text-gray-600 leading-relaxed">
-              Whether you're seeking adventure, relaxation, or cultural immersion, we create personalized itineraries powered by AI that transform your travel dreams into reality. Our intelligent platform ensures every detail is perfectly planned so you can focus on making memories.
-            </p>
-            <div className="flex flex-wrap gap-4 pt-4">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-luxury-teal" />
-                <span className="text-gray-700 font-medium">AI-Powered Planning</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-luxury-orange" />
-                <span className="text-gray-700 font-medium">Instant Itineraries</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-luxury-teal" />
-                <span className="text-gray-700 font-medium">100% Free</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative h-96 rounded-3xl overflow-hidden shadow-luxury">
-            <img
-              src="https://images.pexels.com/photos/1591373/pexels-photo-1591373.jpeg?auto=compress&cs=tinysrgb&w=1200"
-              alt="Travel destination"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-          </div>
-        </div>
       </div>
     </section>
   );
