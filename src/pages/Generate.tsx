@@ -426,7 +426,7 @@ export default function Generate() {
 
   const handleTierClick = (tier: Tier) => {
     if (!user) {
-      setShowSignupPrompt(true);
+      navigate(`/guest-itinerary/${tier.id}`);
       return;
     }
     navigate(`/itinerary/${tier.id}`);
@@ -542,7 +542,7 @@ export default function Generate() {
                   }}
                   className="w-full py-3 rounded-2xl bg-gradient-to-r from-luxury-teal to-luxury-orange text-white font-medium transition-all duration-300 ease-luxury hover:shadow-glow-teal hover:scale-105 active:scale-98"
                 >
-                  {user ? 'See the Full Plan' : 'Sign Up to View Full Plan'}
+                  See the Full Plan
                 </button>
               </div>
             );

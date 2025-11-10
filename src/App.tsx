@@ -11,6 +11,7 @@ import ResetPassword from './pages/ResetPassword';
 import InspireMe from './pages/InspireMe';
 import Generate from './pages/Generate';
 import ItineraryDetail from './pages/ItineraryDetail';
+import GuestItineraryDetail from './pages/GuestItineraryDetail';
 import MyItineraries from './pages/MyItineraries';
 import QuickItinerary from './pages/QuickItinerary';
 import Discovery from './pages/Discovery';
@@ -32,6 +33,7 @@ function App() {
               <Route path="/quick-itinerary" element={<QuickItinerary />} />
               <Route path="/inspire-me" element={<InspireMe />} />
               <Route path="/generate" element={<Generate />} />
+              <Route path="/guest-itinerary/:id" element={<GuestItineraryDetail />} />
               <Route
                 path="/discovery"
                 element={

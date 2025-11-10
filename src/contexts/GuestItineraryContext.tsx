@@ -70,14 +70,47 @@ export function GuestItineraryProvider({ children }: { children: ReactNode }) {
   };
 
   const addGuestItinerary = async (itinerary: Omit<GuestItinerary, 'id'>): Promise<string> => {
-    const tempId = `temp_${Date.now()}`;
-    const newItinerary = { ...itinerary, id: tempId };
+    try {
+      const { data, error } = await supabase
+        .from('guest_itineraries')
+        .insert({
+          session_id: sessionId,
+          destination: itinerary.destination,
+          destination_hero_image_url: itinerary.destination_hero_image_url || null,
+          trip_brief: '',
+          tier: itinerary.tier,
+          days_json: itinerary.days_json,
+          total_cost: itinerary.total_cost,
+          duration_days: 2,
+        })
+        .select()
+        .single();
 
-    const updated = [...guestItineraries, newItinerary];
-    setGuestItineraries(updated);
-    saveToLocalStorage(updated);
+      if (error) {
+        console.error('Error saving guest itinerary to database:', error);
+        const tempId = `temp_${Date.now()}`;
+        const newItinerary = { ...itinerary, id: tempId };
+        const updated = [...guestItineraries, newItinerary];
+        setGuestItineraries(updated);
+        saveToLocalStorage(updated);
+        return tempId;
+      }
 
-    return tempId;
+      const newItinerary = { ...itinerary, id: data.id };
+      const updated = [...guestItineraries, newItinerary];
+      setGuestItineraries(updated);
+      saveToLocalStorage(updated);
+
+      return data.id;
+    } catch (error) {
+      console.error('Error in addGuestItinerary:', error);
+      const tempId = `temp_${Date.now()}`;
+      const newItinerary = { ...itinerary, id: tempId };
+      const updated = [...guestItineraries, newItinerary];
+      setGuestItineraries(updated);
+      saveToLocalStorage(updated);
+      return tempId;
+    }
   };
 
   const getGuestItineraries = async (): Promise<GuestItinerary[]> => {
