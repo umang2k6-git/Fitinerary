@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useGuestItinerary } from '../contexts/GuestItineraryContext';
 import { supabase } from '../lib/supabase';
 import { Sparkles, MapPin, Clock, DollarSign, ChevronLeft, UserPlus } from 'lucide-react';
-import ExportShareModal from '../components/ExportShareModal';
 
 interface Activity {
   timeOfDay: string;
@@ -39,7 +38,6 @@ export default function GuestItineraryDetail() {
   const { sessionId, guestItineraries } = useGuestItinerary();
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showExportModal, setShowExportModal] = useState(false);
   const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -366,11 +364,11 @@ export default function GuestItineraryDetail() {
 
         <div className="flex justify-end gap-4 mb-12">
           <button
-            onClick={() => setShowExportModal(true)}
+            onClick={() => navigate('/signup', { state: { from: 'guest-itinerary-export' } })}
             className="px-6 py-3 rounded-full border-2 border-luxury-orange text-luxury-orange font-medium flex items-center gap-2 hover:bg-luxury-orange hover:text-white transition-all duration-300"
           >
             <Sparkles className="w-5 h-5" />
-            Export & Share
+            Sign Up to Export
           </button>
         </div>
 
@@ -457,13 +455,6 @@ export default function GuestItineraryDetail() {
           ))}
         </div>
       </div>
-
-      {showExportModal && (
-        <ExportShareModal
-          itinerary={itinerary}
-          onClose={() => setShowExportModal(false)}
-        />
-      )}
     </div>
   );
 }
