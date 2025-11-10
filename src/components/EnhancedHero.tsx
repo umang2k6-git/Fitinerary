@@ -19,6 +19,13 @@ export default function EnhancedHero() {
   const parallaxOffset = scrollY * 0.5;
   const scrollIndicatorOpacity = Math.max(0, 1 - scrollY / 300);
 
+  const handleScrollDown = () => {
+    window.scrollBy({
+      top: window.innerHeight,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div
@@ -105,25 +112,17 @@ export default function EnhancedHero() {
               Embrace the call of wanderlust. Pack your bags, set off on new horizons, and let the world be your guide. Safe travels!
             </p>
           </div>
-
-          <div
-            className={`mt-12 transition-all duration-800 delay-800 ${
-              isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
-            }`}
-          >
-            <button className="px-10 py-4 rounded-full bg-gradient-to-r from-luxury-teal to-luxury-orange text-white font-semibold text-lg transition-all duration-300 hover:shadow-glow-teal hover:scale-110 hover:-translate-y-1 active:scale-100">
-              See More
-            </button>
-          </div>
         </div>
       </div>
 
-      <div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 transition-opacity duration-300 z-10"
+      <button
+        onClick={handleScrollDown}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 transition-opacity duration-300 z-10 cursor-pointer hover:scale-110 transition-transform"
         style={{ opacity: scrollIndicatorOpacity }}
+        aria-label="Scroll down"
       >
         <ChevronDown className="w-10 h-10 text-white animate-bounce" />
-      </div>
+      </button>
     </div>
   );
 }
