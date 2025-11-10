@@ -247,39 +247,34 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Budget Range (₹) *
+                  Maximum Budget (₹) *
                 </label>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">Minimum</label>
-                      <input
-                        type="number"
-                        name="budget_min"
-                        value={formData.budget_min}
-                        onChange={handleChange}
-                        min="0"
-                        step="1000"
-                        className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">Maximum</label>
-                      <input
-                        type="number"
-                        name="budget_max"
-                        value={formData.budget_max}
-                        onChange={handleChange}
-                        min={formData.budget_min}
-                        step="1000"
-                        className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all"
-                        required
-                      />
+                  <div className="px-2">
+                    <input
+                      type="range"
+                      name="budget_max"
+                      value={formData.budget_max}
+                      onChange={(e) => setFormData(prev => ({ ...prev, budget_max: parseInt(e.target.value) }))}
+                      min="5000"
+                      max="200000"
+                      step="5000"
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
+                      required
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-2">
+                      <span>₹5,000</span>
+                      <span>₹2,00,000</span>
                     </div>
                   </div>
+                  <div className="bg-gray-50 rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-luxury-teal">
+                      ₹{formData.budget_max.toLocaleString('en-IN')}
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">Maximum budget for your trip</p>
+                  </div>
                   <p className="text-xs text-gray-500">
-                    Your preferred budget range for weekend trips
+                    Your preferred maximum budget cap for weekend trips
                   </p>
                 </div>
               </div>
