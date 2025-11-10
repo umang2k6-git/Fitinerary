@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Heart, Share2, Sparkles, MapPin, Clock, DollarSign, ChevronLeft } from 'lucide-react';
 import ExportShareModal from '../components/ExportShareModal';
+import WeatherForecast from '../components/WeatherForecast';
 
 interface Activity {
   timeOfDay: string;
@@ -43,6 +44,7 @@ export default function ItineraryDetail() {
   const [showConversation, setShowConversation] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
+  const [tripDates, setTripDates] = useState<{ startDate: string; endDate: string } | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -51,6 +53,7 @@ export default function ItineraryDetail() {
     }
 
     fetchItinerary();
+    fetchUserProfile();
   }, [id, user]);
 
   const fetchItinerary = async () => {
@@ -84,6 +87,23 @@ export default function ItineraryDetail() {
       setItinerary(null);
     }
     setLoading(false);
+  };
+
+  const fetchUserProfile = async () => {
+    if (!user?.id) return;
+
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('trip_start_date, trip_end_date')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (data && data.trip_start_date && data.trip_end_date) {
+      setTripDates({
+        startDate: data.trip_start_date,
+        endDate: data.trip_end_date,
+      });
+    }
   };
 
   const generateActivityHash = (activity: Activity, destination: string) => {
@@ -382,6 +402,14 @@ export default function ItineraryDetail() {
             Export & Share
           </button>
         </div>
+
+        {tripDates && (
+          <WeatherForecast
+            destination={itinerary.destination}
+            startDate={tripDates.startDate}
+            endDate={tripDates.endDate}
+          />
+        )}
 
         <div className="space-y-12">
           {itinerary.days_json.map((day: Day) => (
