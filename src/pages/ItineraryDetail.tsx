@@ -54,15 +54,23 @@ export default function ItineraryDetail() {
   }, [id, user]);
 
   const fetchItinerary = async () => {
+    if (!user?.id) {
+      console.error('No user ID available');
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from('itineraries')
       .select('*')
       .eq('id', id)
-      .single();
+      .eq('user_id', user.id)
+      .maybeSingle();
 
     if (error) {
       console.error('Error fetching itinerary:', error);
-    } else {
+      setItinerary(null);
+    } else if (data) {
       setItinerary(data);
       // Load images for all activities
       if (data?.days_json) {
@@ -72,6 +80,8 @@ export default function ItineraryDetail() {
           });
         });
       }
+    } else {
+      setItinerary(null);
     }
     setLoading(false);
   };
@@ -275,12 +285,20 @@ export default function ItineraryDetail() {
 
   if (!itinerary) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-luxury-charcoal via-gray-900 to-luxury-charcoal flex items-center justify-center">
-        <div className="text-center text-white">
-          <p className="text-xl">Itinerary not found</p>
-          <button onClick={() => navigate('/')} className="btn-primary mt-6">
-            Go Home
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-luxury-charcoal via-gray-900 to-luxury-charcoal flex items-center justify-center px-6">
+        <div className="text-center text-white max-w-md">
+          <p className="text-2xl font-light mb-4">Itinerary not found</p>
+          <p className="text-white/70 mb-8">
+            This itinerary doesn't exist or you don't have permission to view it.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <button onClick={() => navigate('/my-itineraries')} className="btn-secondary">
+              My Itineraries
+            </button>
+            <button onClick={() => navigate('/')} className="btn-primary">
+              Create New Plan
+            </button>
+          </div>
         </div>
       </div>
     );

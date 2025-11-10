@@ -70,11 +70,23 @@ export function GuestItineraryProvider({ children }: { children: ReactNode }) {
   };
 
   const addGuestItinerary = async (itinerary: Omit<GuestItinerary, 'id'>): Promise<string> => {
+    const currentSessionId = sessionId || getOrCreateSessionId();
+
+    if (!currentSessionId) {
+      console.error('Unable to get or create session ID');
+      const tempId = `temp_${Date.now()}`;
+      const newItinerary = { ...itinerary, id: tempId };
+      const updated = [...guestItineraries, newItinerary];
+      setGuestItineraries(updated);
+      saveToLocalStorage(updated);
+      return tempId;
+    }
+
     try {
       const { data, error } = await supabase
         .from('guest_itineraries')
         .insert({
-          session_id: sessionId,
+          session_id: currentSessionId,
           destination: itinerary.destination,
           destination_hero_image_url: itinerary.destination_hero_image_url || null,
           trip_brief: '',

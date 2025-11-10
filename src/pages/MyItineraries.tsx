@@ -52,13 +52,20 @@ export default function MyItineraries() {
       return;
     }
 
+    if (!user?.id) {
+      console.error('No user ID available');
+      return;
+    }
+
     const { error } = await supabase
       .from('itineraries')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', user.id);
 
     if (error) {
       console.error('Error deleting itinerary:', error);
+      alert('Failed to delete itinerary. Please try again.');
     } else {
       setItineraries(itineraries.filter((it) => it.id !== id));
     }

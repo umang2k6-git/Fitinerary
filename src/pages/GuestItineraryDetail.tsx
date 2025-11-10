@@ -43,10 +43,18 @@ export default function GuestItineraryDetail() {
   const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    fetchItinerary();
+    if (sessionId) {
+      fetchItinerary();
+    }
   }, [id, sessionId, guestItineraries]);
 
   const fetchItinerary = async () => {
+    if (!sessionId) {
+      console.error('No session ID available');
+      setLoading(false);
+      return;
+    }
+
     try {
       const localItinerary = guestItineraries.find(it => it.id === id);
 
@@ -68,38 +76,44 @@ export default function GuestItineraryDetail() {
             });
           });
         }
-      } else {
-        const { data, error } = await supabase
-          .from('guest_itineraries')
-          .select('*')
-          .eq('id', id)
-          .eq('session_id', sessionId)
-          .maybeSingle();
+        setLoading(false);
+        return;
+      }
 
-        if (error) {
-          console.error('Error fetching guest itinerary:', error);
-        } else if (data) {
-          setItinerary({
-            id: data.id,
-            destination: data.destination,
-            destination_hero_image_url: data.destination_hero_image_url || '',
-            tier: data.tier,
-            days_json: data.days_json,
-            total_cost: data.total_cost,
-            duration_days: data.duration_days,
-          });
+      const { data, error } = await supabase
+        .from('guest_itineraries')
+        .select('*')
+        .eq('id', id)
+        .eq('session_id', sessionId)
+        .maybeSingle();
 
-          if (data.days_json) {
-            data.days_json.forEach((day: Day) => {
-              day.activities.forEach((activity: Activity) => {
-                loadActivityImages(activity, data.destination);
-              });
+      if (error) {
+        console.error('Error fetching guest itinerary:', error);
+        setItinerary(null);
+      } else if (data) {
+        setItinerary({
+          id: data.id,
+          destination: data.destination,
+          destination_hero_image_url: data.destination_hero_image_url || '',
+          tier: data.tier,
+          days_json: data.days_json,
+          total_cost: data.total_cost,
+          duration_days: data.duration_days,
+        });
+
+        if (data.days_json) {
+          data.days_json.forEach((day: Day) => {
+            day.activities.forEach((activity: Activity) => {
+              loadActivityImages(activity, data.destination);
             });
-          }
+          });
         }
+      } else {
+        setItinerary(null);
       }
     } catch (error) {
       console.error('Error in fetchItinerary:', error);
+      setItinerary(null);
     } finally {
       setLoading(false);
     }
@@ -261,13 +275,23 @@ export default function GuestItineraryDetail() {
 
   if (!itinerary) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-luxury-charcoal via-gray-900 to-luxury-charcoal flex items-center justify-center">
-        <div className="text-center text-white">
-          <p className="text-xl mb-4">Itinerary not found</p>
-          <p className="text-white/60 mb-6">This itinerary may have expired or been removed.</p>
-          <button onClick={() => navigate('/')} className="btn-primary">
-            Create New Itinerary
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-luxury-charcoal via-gray-900 to-luxury-charcoal flex items-center justify-center px-6">
+        <div className="text-center text-white max-w-md">
+          <p className="text-2xl font-light mb-4">Itinerary not found</p>
+          <p className="text-white/70 mb-6">
+            This itinerary may have expired (guest itineraries are saved for 7 days) or the link may be incorrect.
+          </p>
+          <div className="flex gap-4 justify-center flex-wrap">
+            <button onClick={() => navigate('/quick-itinerary')} className="btn-secondary">
+              Create New Itinerary
+            </button>
+            <button
+              onClick={() => navigate('/signup', { state: { from: 'guest-itinerary' } })}
+              className="btn-primary"
+            >
+              Sign Up to Save Forever
+            </button>
+          </div>
         </div>
       </div>
     );
