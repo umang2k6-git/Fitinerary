@@ -21,7 +21,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
     travel_purpose: 'Solo' as 'Solo' | 'Couple' | 'Family',
     budget_min: 5000,
     budget_max: 50000,
-    accommodation_style: 'mid-range',
+    accommodation_style: 'balanced',
     dining_preference: 'mix',
     travel_pace: 'moderate' as 'relaxed' | 'moderate' | 'packed',
     accessibility_requirements: '',
@@ -52,7 +52,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           travel_purpose: data.travel_purpose || 'Solo',
           budget_min: data.budget_min || 5000,
           budget_max: data.budget_max || 50000,
-          accommodation_style: data.accommodation_style || 'mid-range',
+          accommodation_style: data.accommodation_style || 'balanced',
           dining_preference: data.dining_preference || 'mix',
           travel_pace: data.travel_pace || 'moderate',
           accessibility_requirements: data.accessibility_requirements || '',
@@ -297,10 +297,9 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white"
                   required
                 >
-                  <option value="budget">Budget (Hostels, Budget Hotels)</option>
-                  <option value="mid-range">Mid-Range (Boutique Hotels, 3-Star)</option>
-                  <option value="luxury">Luxury (5-Star Hotels, Resorts)</option>
-                  <option value="unique">Unique (Homestays, Villas, Heritage Properties)</option>
+                  <option value="budget">Budget</option>
+                  <option value="balanced">Balanced</option>
+                  <option value="luxe">Luxe</option>
                 </select>
               </div>
 
