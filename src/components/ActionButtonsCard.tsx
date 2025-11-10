@@ -1,8 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Zap } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function ActionButtonsCard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handlePersonalizedClick = () => {
+    if (user) {
+      navigate('/discovery');
+    } else {
+      navigate('/login', { state: { from: 'personalized' } });
+    }
+  };
 
   return (
     <div className="glass-dark rounded-3xl p-8 shadow-float backdrop-blur-xl animate-fade-in-up">
@@ -13,7 +23,7 @@ export default function ActionButtonsCard() {
       <div className="space-y-6">
         <div className="group">
           <button
-            onClick={() => navigate('/login', { state: { from: 'personalized' } })}
+            onClick={handlePersonalizedClick}
             className="w-full text-left p-6 rounded-2xl bg-gradient-to-r from-luxury-teal to-luxury-orange transition-all duration-300 ease-luxury hover:shadow-glow-teal hover:scale-105 active:scale-98"
           >
             <div className="flex items-start gap-4">
