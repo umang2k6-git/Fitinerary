@@ -433,7 +433,11 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
             {currentStep > 1 && (
               <button
                 type="button"
-                onClick={() => setCurrentStep(prev => prev - 1)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setCurrentStep(prev => prev - 1);
+                }}
                 className="px-6 py-3 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -453,7 +457,11 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
             {currentStep < totalSteps ? (
               <button
                 type="button"
-                onClick={() => setCurrentStep(prev => prev + 1)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setCurrentStep(prev => prev + 1);
+                }}
                 className="flex-1 btn-primary flex items-center justify-center gap-2"
               >
                 Next
