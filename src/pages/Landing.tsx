@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import EnhancedHero from '../components/EnhancedHero';
-import BookingWidget from '../components/BookingWidget';
 import DestinationCard from '../components/DestinationCard';
 import ValueProposition from '../components/ValueProposition';
 import ActionButtonsCard from '../components/ActionButtonsCard';
@@ -42,12 +41,6 @@ export default function Landing() {
   return (
     <div className="relative">
       <EnhancedHero />
-
-      <section className="relative -mt-24 z-20 px-6 md:px-12">
-        <div className="max-w-7xl mx-auto">
-          <BookingWidget />
-        </div>
-      </section>
 
       <section className="py-20 px-6 md:px-12 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto">
