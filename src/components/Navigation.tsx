@@ -18,8 +18,8 @@ export default function Navigation() {
     <nav className="fixed top-0 left-0 right-0 z-50 glass-dark">
       <div className="max-w-7xl mx-auto px-6 py-2">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-white font-semibold text-xl group">
-            <img src="/Logo 2.png" alt="Fitinerary" className="w-32 h-32 transition-transform duration-300 group-hover:scale-110" />
+          <Link to="/" className="flex items-center gap-2 text-white font-semibold text-3xl group">
+            <img src="/Logo 2.png" alt="Fitinerary" className="w-16 h-16 transition-transform duration-300 group-hover:scale-110" />
             <span>Fitinerary</span>
           </Link>
 
