@@ -16,7 +16,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     start_city: '',
-    destination_city: '',
     trip_start_date: '',
     trip_end_date: '',
     travel_purpose: 'Solo' as 'Solo' | 'Couple' | 'Family',
@@ -47,7 +46,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
       if (data) {
         setFormData({
           start_city: data.start_city || '',
-          destination_city: data.destination_city || '',
           trip_start_date: data.trip_start_date || '',
           trip_end_date: data.trip_end_date || '',
           travel_purpose: data.travel_purpose || 'Solo',
@@ -177,27 +175,15 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
             <div className="space-y-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Basic Information</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <CityAutocomplete
-                  id="start_city"
-                  name="start_city"
-                  value={formData.start_city}
-                  onChange={(value) => setFormData(prev => ({ ...prev, start_city: value }))}
-                  placeholder="e.g., Mumbai, Delhi, Bangalore"
-                  label="Starting Trip Point"
-                  required
-                />
-
-                <CityAutocomplete
-                  id="destination_city"
-                  name="destination_city"
-                  value={formData.destination_city}
-                  onChange={(value) => setFormData(prev => ({ ...prev, destination_city: value }))}
-                  placeholder="e.g., Goa, Shimla, Jaipur"
-                  label="Travel Destination"
-                  required
-                />
-              </div>
+              <CityAutocomplete
+                id="start_city"
+                name="start_city"
+                value={formData.start_city}
+                onChange={(value) => setFormData(prev => ({ ...prev, start_city: value }))}
+                placeholder="e.g., Mumbai, Delhi, Bangalore"
+                label="Starting Trip Point"
+                required
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
