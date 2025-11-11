@@ -114,11 +114,16 @@ Ensure all 6 destinations are DIFFERENT from each other, realistic, and genuinel
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "o1-mini",
+        model: "gpt-4o",
         messages: [
+          {
+            role: "system",
+            content: "You are a travel expert specializing in Indian and international destinations. Think deeply about each recommendation, considering weather, logistics, budget, and traveler preferences. Always respond with valid JSON only, no markdown or explanations."
+          },
           { role: "user", content: prompt }
         ],
-        max_completion_tokens: 10000,
+        temperature: 0.8,
+        max_tokens: 3000,
       }),
     });
 

@@ -194,8 +194,8 @@ CRITICAL:
 - Each tier must offer distinctly different value and experiences
 - Total costs should clearly differentiate the tiers`;
 
-    const useReasoningModel = userProfile && !isGuest;
-    console.log(`Using ${useReasoningModel ? 'o1-mini (reasoning)' : 'gpt-4o-mini (fast)'} model for itinerary generation`);
+    const useDetailedModel = userProfile && !isGuest;
+    console.log(`Using ${useDetailedModel ? 'gpt-4o (detailed)' : 'gpt-4o-mini (fast)'} model for itinerary generation`);
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -204,11 +204,15 @@ CRITICAL:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(
-        useReasoningModel
+        useDetailedModel
           ? {
-              model: 'o1-mini',
-              messages: [{ role: 'user', content: prompt }],
-              max_completion_tokens: 15000,
+              model: 'gpt-4o',
+              messages: [
+                { role: 'system', content: 'You are an expert travel planner with deep knowledge of destinations worldwide. Think carefully about each recommendation. Always respond with valid JSON only, no markdown or explanations.' },
+                { role: 'user', content: prompt }
+              ],
+              temperature: 0.8,
+              max_tokens: 4000,
             }
           : {
               model: 'gpt-4o-mini',
