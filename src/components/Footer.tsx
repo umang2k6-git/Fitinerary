@@ -172,7 +172,7 @@ export default function Footer() {
                 <div className="flex flex-col items-center text-center">
                   <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-luxury-teal shadow-lg mb-4">
                     <img
-                      src="https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=300"
+                      src="/1759403490557.jpg"
                       alt="Umang Agarwalla"
                       className="w-full h-full object-cover"
                     />
