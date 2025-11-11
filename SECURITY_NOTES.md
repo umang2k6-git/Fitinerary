@@ -8,14 +8,33 @@
 - **Impact**: Improved query performance significantly for large datasets
 - **Affected Tables**: `itineraries`, `conversation_history`
 
-### 2. Unused Indexes Removed (RESOLVED)
+### 2. Database Index Optimization (RESOLVED)
 - **Issue**: Several database indexes were created but never used by queries
 - **Solution**: Removed unused indexes to reduce storage overhead and improve write performance
 - **Removed Indexes**:
   - `idx_itineraries_destination`
   - `idx_itineraries_created_at`
-  - `idx_conversation_history_itinerary_id`
+  - `idx_guest_itineraries_session_id`
+  - `idx_guest_itineraries_expires_at`
+  - `idx_guest_itineraries_created_at`
+  - `idx_travel_trivia_category`
+  - `idx_weather_forecasts_created_at`
+- **Added Indexes**:
+  - `idx_conversation_history_itinerary_id` (for foreign key performance)
 - **Kept Indexes**: `idx_itineraries_user_id` (actively used for user-based queries)
+
+### 3. Function Search Path Security (RESOLVED)
+- **Issue**: Function `cleanup_expired_guest_itineraries` had a mutable search path
+- **Solution**: Recreated function with `SET search_path = public, pg_catalog`
+- **Impact**: Prevents potential security vulnerabilities from schema manipulation
+- **Security Level**: SECURITY DEFINER functions now have immutable, predictable search paths
+
+### 4. RLS on Public Tables (RESOLVED)
+- **Issue**: Table `interests_tags` was public but RLS was not enabled
+- **Solution**: Enabled RLS and added appropriate policies
+  - Public read access for all users (reference data)
+  - Write access restricted to service role only
+- **Impact**: Prevents unauthorized modifications while maintaining read access
 
 ## ⚠️ Leaked Password Protection
 
