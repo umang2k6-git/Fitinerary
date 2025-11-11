@@ -41,6 +41,9 @@ export default function InterestTagSelector({ selectedTags, onChange }: Interest
     if (selectedTags.includes(tagName)) {
       onChange(selectedTags.filter(t => t !== tagName));
     } else {
+      if (selectedTags.length >= 3) {
+        return;
+      }
       onChange([...selectedTags, tagName]);
     }
   };
@@ -59,23 +62,36 @@ export default function InterestTagSelector({ selectedTags, onChange }: Interest
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center mb-2">
+        <p className="text-sm text-gray-600">
+          Select up to 3 types of experiences for personalization
+        </p>
+        <span className={`text-sm font-semibold ${selectedTags.length >= 3 ? 'text-luxury-teal' : 'text-gray-500'}`}>
+          {selectedTags.length}/3
+        </span>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {tags.map(tag => {
           const IconComponent = getIcon(tag.icon);
           const isSelected = selectedTags.includes(tag.name);
+          const isDisabled = !isSelected && selectedTags.length >= 3;
 
           return (
             <button
               key={tag.id}
               type="button"
               onClick={() => toggleTag(tag.name)}
+              disabled={isDisabled}
               className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
                 isSelected
                   ? 'border-luxury-teal bg-luxury-teal/10 text-luxury-teal'
+                  : isDisabled
+                  ? 'border-gray-200 text-gray-400 cursor-not-allowed opacity-50'
                   : 'border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <IconComponent className={`w-6 h-6 ${isSelected ? 'text-luxury-teal' : 'text-gray-600'}`} />
+              <IconComponent className={`w-6 h-6 ${isSelected ? 'text-luxury-teal' : isDisabled ? 'text-gray-400' : 'text-gray-600'}`} />
               <span className="text-sm font-medium text-center">{tag.name}</span>
             </button>
           );
@@ -84,7 +100,7 @@ export default function InterestTagSelector({ selectedTags, onChange }: Interest
 
       {selectedTags.length > 0 && (
         <div className="pt-2">
-          <p className="text-sm text-gray-600 mb-2">Selected interests ({selectedTags.length}):</p>
+          <p className="text-sm text-gray-600 mb-2">Selected interests ({selectedTags.length}/3):</p>
           <div className="flex flex-wrap gap-2">
             {selectedTags.map(tagName => {
               const tag = tags.find(t => t.name === tagName);
