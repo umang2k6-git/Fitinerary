@@ -172,7 +172,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
             'Content-Type': 'application/json',
           },
           signal: controller.signal,
@@ -181,17 +180,27 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error('API Error Response:', errorText);
+          console.error('API Error Response Status:', response.status);
 
           let errorData;
           try {
+            const errorText = await response.text();
+            console.error('API Error Response Body:', errorText);
             errorData = JSON.parse(errorText);
-          } catch {
-            errorData = { error: 'Server error occurred' };
+          } catch (parseError) {
+            console.error('Failed to parse error response:', parseError);
+            errorData = { error: `Server returned ${response.status} error. Please try again.` };
           }
 
-          throw new Error(errorData.error || `Server error: ${response.status}`);
+          if (response.status === 401) {
+            throw new Error('Your session has expired. Please refresh the page and try again.');
+          } else if (response.status === 500) {
+            throw new Error('The server encountered an error. Our team has been notified. Please try again in a few moments.');
+          } else if (response.status >= 400 && response.status < 500) {
+            throw new Error(errorData.error || `Request failed: ${response.status}. Please check your information and try again.`);
+          }
+
+          throw new Error(errorData.error || 'An unexpected error occurred. Please try again.');
         }
 
         const data = await response.json();
@@ -210,8 +219,12 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           throw new Error('Request timed out. The server is taking too long to respond. Please try again.');
         }
 
-        if (fetchError.message.includes('fetch')) {
+        if (fetchError.message.includes('fetch') || fetchError.message.includes('network') || fetchError.message.includes('Failed to fetch')) {
           throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
+        }
+
+        if (fetchError.message.includes('CORS')) {
+          throw new Error('Connection blocked. Please ensure you have a stable internet connection and try again.');
         }
 
         throw fetchError;
