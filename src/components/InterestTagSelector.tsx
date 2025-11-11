@@ -18,7 +18,6 @@ interface InterestTagSelectorProps {
 export default function InterestTagSelector({ selectedTags, onChange }: InterestTagSelectorProps) {
   const [tags, setTags] = useState<InterestTag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {
     fetchTags();
@@ -37,12 +36,6 @@ export default function InterestTagSelector({ selectedTags, onChange }: Interest
     }
     setLoading(false);
   };
-
-  const categories = ['all', ...Array.from(new Set(tags.map(tag => tag.category)))];
-
-  const filteredTags = selectedCategory === 'all'
-    ? tags
-    : tags.filter(tag => tag.category === selectedCategory);
 
   const toggleTag = (tagName: string) => {
     if (selectedTags.includes(tagName)) {
@@ -66,25 +59,8 @@ export default function InterestTagSelector({ selectedTags, onChange }: Interest
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {categories.map(category => (
-          <button
-            key={category}
-            type="button"
-            onClick={() => setSelectedCategory(category)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${
-              selectedCategory === category
-                ? 'bg-luxury-teal text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
-
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        {filteredTags.map(tag => {
+        {tags.map(tag => {
           const IconComponent = getIcon(tag.icon);
           const isSelected = selectedTags.includes(tag.name);
 
