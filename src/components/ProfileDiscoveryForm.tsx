@@ -33,17 +33,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
     loadExistingProfile();
   }, [user]);
 
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
-
   const loadExistingProfile = async () => {
     if (!user) return;
 
@@ -152,14 +141,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
   const totalSteps = 2;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
-    >
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl my-8">
         <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-3xl z-10">
           <div className="flex items-center justify-between">
