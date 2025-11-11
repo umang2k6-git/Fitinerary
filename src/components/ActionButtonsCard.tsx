@@ -35,7 +35,7 @@ export default function ActionButtonsCard() {
                   Create your Personalized Itinerary
                 </h3>
                 <p className="text-white/90 text-sm leading-relaxed">
-                  Tell us about your travel preferences and we'll craft deeply customized itineraries just for you. Perfect for travelers who want experiences that truly match their style.
+                  Get a custom itinerary tailored to your travel style.
                 </p>
               </div>
             </div>
@@ -67,7 +67,7 @@ export default function ActionButtonsCard() {
                   Create a quick itinerary
                 </h3>
                 <p className="text-white/80 text-sm leading-relaxed">
-                  Get three instant weekend plans in 30 seconds. No signup needed. Perfect for spontaneous travelers who want quick inspiration.
+                  Three instant weekend plans in 30 seconds. No signup required.
                 </p>
               </div>
             </div>
