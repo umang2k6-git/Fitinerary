@@ -31,9 +31,11 @@ export default function ForgotPassword() {
       <div className="w-full max-w-md">
         <div className="card-luxury p-8 md:p-10 animate-scale-in">
           <div className="flex items-center justify-center mb-8">
-            <div className="p-3 rounded-full bg-gradient-to-r from-luxury-teal to-luxury-orange">
-              <Mail className="w-6 h-6 text-white" />
-            </div>
+            <img
+              src="/Fitinerary Logo 2.jpg"
+              alt="Fitinerary"
+              className="w-40 h-auto"
+            />
           </div>
 
           <h2 className="text-3xl font-light text-center mb-2" style={{ letterSpacing: '-0.02em' }}>

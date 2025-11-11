@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Search, Loader2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { X, Search, ChevronRight, ChevronLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import InterestTagSelector from './InterestTagSelector';
 import CityAutocomplete from './CityAutocomplete';
 import PackageCards from './PackageCards';
+import LoadingLogo from './LoadingLogo';
 
 interface ProfileDiscoveryFormProps {
   onClose: () => void;
@@ -267,6 +268,15 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      {loading && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60]">
+          <div className="text-center">
+            <LoadingLogo />
+            <p className="text-white text-lg mt-6 font-light">Generating Your Perfect Itinerary...</p>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl my-8">
         <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-3xl z-10">
           <div className="flex items-center justify-between">
