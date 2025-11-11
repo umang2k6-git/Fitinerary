@@ -13,6 +13,9 @@ interface Destination {
   bestFor: string[];
   distanceFromStart: string;
   matchScore: number;
+  heroImageUrl?: string;
+  imagePhotographer?: string;
+  imagePhotographerUrl?: string;
 }
 
 interface ProfileData {
@@ -83,7 +86,7 @@ export default function PersonalizedDestinations() {
       state: {
         destination: destination.name,
         tripBrief: destination.description,
-        destinationImageUrl: null,
+        destinationImageUrl: destination.heroImageUrl || null,
         useProfile: true,
       }
     });
@@ -169,21 +172,45 @@ export default function PersonalizedDestinations() {
               className="bg-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
               onClick={() => handleSelectDestination(destination)}
             >
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-1 group-hover:text-luxury-teal transition-colors">
+              {destination.heroImageUrl && (
+                <div className="relative h-56 overflow-hidden">
+                  <img
+                    src={destination.heroImageUrl}
+                    alt={destination.name}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  <div className="absolute top-4 right-4 flex items-center gap-1 bg-luxury-teal px-3 py-1 rounded-full">
+                    <TrendingUp className="w-4 h-4 text-white" />
+                    <span className="text-white font-semibold text-sm">{destination.matchScore}%</span>
+                  </div>
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-2xl font-bold text-white mb-1 drop-shadow-lg">
                       {destination.name}
                     </h3>
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-white/90 text-sm drop-shadow">
                       {destination.state}, {destination.country}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 bg-luxury-teal/10 px-3 py-1 rounded-full">
-                    <TrendingUp className="w-4 h-4 text-luxury-teal" />
-                    <span className="text-luxury-teal font-semibold text-sm">{destination.matchScore}%</span>
-                  </div>
                 </div>
+              )}
+              <div className="p-6">
+                {!destination.heroImageUrl && (
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-1 group-hover:text-luxury-teal transition-colors">
+                        {destination.name}
+                      </h3>
+                      <p className="text-gray-500 text-sm">
+                        {destination.state}, {destination.country}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 bg-luxury-teal/10 px-3 py-1 rounded-full">
+                      <TrendingUp className="w-4 h-4 text-luxury-teal" />
+                      <span className="text-luxury-teal font-semibold text-sm">{destination.matchScore}%</span>
+                    </div>
+                  </div>
+                )}
 
                 <p className="text-gray-600 text-sm mb-4 line-clamp-3" style={{ lineHeight: '1.6' }}>
                   {destination.description}

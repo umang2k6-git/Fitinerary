@@ -48,45 +48,64 @@ Deno.serve(async (req: Request) => {
       (new Date(profile.trip_end_date).getTime() - new Date(profile.trip_start_date).getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    const prompt = `You are a travel expert. Based on the following user preferences, suggest 6 diverse destinations (both within India and international) that perfectly match their criteria. Consider both popular destinations and hidden gems. Include a good mix of domestic and international options based on their budget.
+    const tripMonth = new Date(profile.trip_start_date).toLocaleDateString('en-US', { month: 'long' });
+    const randomSeed = Date.now();
 
-User Preferences:
-- Start City: ${profile.start_city}
-- Travel Dates: ${profile.trip_start_date} to ${profile.trip_end_date} (${tripDuration} days)
-- Traveling With: ${profile.travel_purpose}
-- Budget Range: ₹${profile.budget_min.toLocaleString('en-IN')} - ₹${profile.budget_max.toLocaleString('en-IN')}
-- Accommodation Style: ${profile.accommodation_style}
-- Dining Preference: ${profile.dining_preference}
-- Travel Pace: ${profile.travel_pace}
-- Preferred Activities: ${profile.preferred_activities.join(', ')}
-- Special Interests: ${profile.special_interests.join(', ')}
-${profile.dietary_restrictions ? `- Dietary Restrictions: ${profile.dietary_restrictions}` : ''}
-${profile.accessibility_requirements ? `- Accessibility Needs: ${profile.accessibility_requirements}` : ''}
+    const prompt = `As a travel expert with deep knowledge of Indian and international destinations, analyze the following traveler profile and recommend 6 diverse destinations that PERFECTLY match their unique preferences and constraints.
 
-For each destination, provide:
-1. Name (city/place name)
-2. Country (e.g., India, Thailand, UAE, etc.)
-3. State/Region (for India, provide state; for international, provide region/province)
-4. Brief description (2-3 sentences highlighting why it matches their preferences)
-5. Estimated budget for the trip including flights/transport
-6. Best suited for (activity types that match their interests)
-7. Approximate travel distance/time from their start city
+CRITICAL INSTRUCTIONS:
+- Think deeply about seasonal weather, local events, and travel logistics
+- Consider flight availability and costs from the start city
+- Balance between popular destinations and hidden gems
+- Ensure true diversity: mix Indian (domestic) and international options appropriately for the budget
+- Each recommendation should be UNIQUELY suited to this specific traveler profile
+- Randomization seed: ${randomSeed} (use this to ensure variety in recommendations)
 
-Return ONLY a valid JSON array with 6 destinations in this exact format:
+TRAVELER PROFILE:
+┌─────────────────────────────────────────────────────────┐
+│ Basic Information                                        │
+├─────────────────────────────────────────────────────────┤
+│ Starting From: ${profile.start_city}
+│ Travel Period: ${profile.trip_start_date} to ${profile.trip_end_date}
+│ Duration: ${tripDuration} days in ${tripMonth}
+│ Traveling With: ${profile.travel_purpose}
+│ Budget Range: ₹${profile.budget_min.toLocaleString('en-IN')} - ₹${profile.budget_max.toLocaleString('en-IN')}
+├─────────────────────────────────────────────────────────┤
+│ Travel Style & Preferences                              │
+├─────────────────────────────────────────────────────────┤
+│ Accommodation: ${profile.accommodation_style}
+│ Dining Style: ${profile.dining_preference}
+│ Travel Pace: ${profile.travel_pace}
+│ Preferred Activities: ${profile.preferred_activities.join(', ')}
+│ Special Interests: ${profile.special_interests.join(', ')}
+${profile.dietary_restrictions ? `│ Dietary Restrictions: ${profile.dietary_restrictions}` : ''}
+${profile.accessibility_requirements ? `│ Accessibility Needs: ${profile.accessibility_requirements}` : ''}
+└─────────────────────────────────────────────────────────┘
+
+REASONING PROCESS:
+1. Analyze the travel dates and consider weather patterns for each potential destination
+2. Calculate realistic flight/travel costs from ${profile.start_city}
+3. Match activities and interests to destination strengths
+4. Consider the travel pace and plan destinations accordingly
+5. Factor in accommodation and dining preferences
+6. Ensure budget feasibility including all costs (transport, stay, food, activities)
+7. Provide diverse options across different regions and experience types
+
+OUTPUT FORMAT (return ONLY valid JSON, no markdown):
 [
   {
-    "name": "Destination Name",
+    "name": "Exact Destination Name",
     "country": "Country Name",
     "state": "State/Region Name",
-    "description": "Brief description",
-    "estimatedBudget": 50000,
-    "bestFor": ["Activity 1", "Activity 2", "Activity 3"],
-    "distanceFromStart": "XXX km / X hours flight",
-    "matchScore": 95
+    "description": "2-3 compelling sentences explaining why this destination is PERFECT for this traveler's specific preferences, considering weather in ${tripMonth} and their interests",
+    "estimatedBudget": <realistic total cost in INR including flights, accommodation, food, activities>,
+    "bestFor": ["Activity 1 from their preferences", "Activity 2", "Activity 3"],
+    "distanceFromStart": "Approximate distance/flight time from ${profile.start_city}",
+    "matchScore": <0-100 score based on how well it matches ALL criteria>
   }
 ]
 
-Ensure destinations are diverse (mix of Indian and international), realistic, and truly match the user's preferences and budget. Consider flight costs for international destinations. Match score should be 0-100 based on how well it fits.`;
+Ensure all 6 destinations are DIFFERENT from each other, realistic, and genuinely match this specific profile. Mix domestic and international based on budget constraints.`;
 
     const openAIResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -95,13 +114,16 @@ Ensure destinations are diverse (mix of Indian and international), realistic, an
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-4o",
         messages: [
-          { role: "system", content: "You are a travel expert specializing in Indian and international destinations. Always respond with valid JSON only, no markdown or explanations." },
+          {
+            role: "system",
+            content: "You are a travel expert specializing in Indian and international destinations. Think deeply about each recommendation, considering weather, logistics, budget, and traveler preferences. Always respond with valid JSON only, no markdown or explanations."
+          },
           { role: "user", content: prompt }
         ],
         temperature: 0.8,
-        max_tokens: 2000,
+        max_tokens: 3000,
       }),
     });
 
@@ -126,9 +148,53 @@ Ensure destinations are diverse (mix of Indian and international), realistic, an
       throw new Error("Failed to parse destination suggestions");
     }
 
+    console.log(`Successfully parsed ${destinations.length} destinations, fetching images...`);
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const destinationsWithImages = await Promise.all(
+      destinations.map(async (destination: any) => {
+        try {
+          const imageResponse = await fetch(
+            `${supabaseUrl}/functions/v1/fetch-destination-image`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                destinationName: destination.name,
+                country: destination.country,
+              }),
+            }
+          );
+
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json();
+            return {
+              ...destination,
+              heroImageUrl: imageData.imageUrl,
+              imagePhotographer: imageData.photographer,
+              imagePhotographerUrl: imageData.photographerUrl,
+            };
+          }
+        } catch (imageError) {
+          console.error(`Error fetching image for ${destination.name}:`, imageError);
+        }
+
+        return {
+          ...destination,
+          heroImageUrl: `https://images.pexels.com/photos/1008155/pexels-photo-1008155.jpeg?auto=compress&cs=tinysrgb&w=1920`,
+          imagePhotographer: "Pexels",
+          imagePhotographerUrl: "https://www.pexels.com"
+        };
+      })
+    );
+
+    console.log(`All destinations enhanced with images`);
+
     return new Response(
       JSON.stringify({
-        destinations,
+        destinations: destinationsWithImages,
         profile: {
           start_city: profile.start_city,
           trip_start_date: profile.trip_start_date,

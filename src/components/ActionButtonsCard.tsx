@@ -32,10 +32,10 @@ export default function ActionButtonsCard() {
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  Create your Personalized Itinerary
+                  Build Your Dream Itinerary
                 </h3>
                 <p className="text-white/90 text-sm leading-relaxed">
-                  Tell us about your travel preferences and we'll craft deeply customized itineraries just for you. Perfect for travelers who want experiences that truly match their style.
+                  Personalized travel experiences based on your preferences
                 </p>
               </div>
             </div>
@@ -64,10 +64,10 @@ export default function ActionButtonsCard() {
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  Create a quick itinerary
+                  Get Instant Weekend Plans
                 </h3>
                 <p className="text-white/80 text-sm leading-relaxed">
-                  Get three instant weekend plans in 30 seconds. No signup needed. Perfect for spontaneous travelers who want quick inspiration.
+                  Three plans in 30 seconds. No signup required.
                 </p>
               </div>
             </div>
