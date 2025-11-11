@@ -9,9 +9,7 @@ export default {
           orange: '#FF6B35',
           charcoal: '#1A1A1A',
           white: '#FAFAFA',
-          gold: '#D4A574',
-          navy: '#1E3A5F',
-          tan: '#E5D5C3',
+          gold: '#D4AF37',
         },
       },
       fontFamily: {
