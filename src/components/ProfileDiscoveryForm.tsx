@@ -4,6 +4,7 @@ import { X, Save, Loader2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import InterestTagSelector from './InterestTagSelector';
+import CityAutocomplete from './CityAutocomplete';
 
 interface ProfileDiscoveryFormProps {
   onClose: () => void;
@@ -16,6 +17,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     start_city: '',
+    destination_city: '',
     trip_start_date: '',
     trip_end_date: '',
     travel_purpose: 'Solo' as 'Solo' | 'Couple' | 'Family',
@@ -47,6 +49,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
       if (data) {
         setFormData({
           start_city: data.start_city || '',
+          destination_city: data.destination_city || '',
           trip_start_date: data.trip_start_date || '',
           trip_end_date: data.trip_end_date || '',
           travel_purpose: data.travel_purpose || 'Solo',
@@ -177,18 +180,24 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
             <div className="space-y-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Basic Information</h3>
 
-              <div>
-                <label htmlFor="start_city" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Home City *
-                </label>
-                <input
-                  type="text"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <CityAutocomplete
                   id="start_city"
                   name="start_city"
                   value={formData.start_city}
-                  onChange={handleChange}
-                  placeholder="e.g., New York, London, Tokyo"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all"
+                  onChange={(value) => setFormData(prev => ({ ...prev, start_city: value }))}
+                  placeholder="e.g., Mumbai, Delhi, Bangalore"
+                  label="Starting Trip Point"
+                  required
+                />
+
+                <CityAutocomplete
+                  id="destination_city"
+                  name="destination_city"
+                  value={formData.destination_city}
+                  onChange={(value) => setFormData(prev => ({ ...prev, destination_city: value }))}
+                  placeholder="e.g., Goa, Shimla, Jaipur"
+                  label="Travel Destination"
                   required
                 />
               </div>
