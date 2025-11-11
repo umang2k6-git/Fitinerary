@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Menu, X, User, LogOut, Plane } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
 
 export default function Navigation() {
   const { user, signOut } = useAuth();
@@ -19,7 +19,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-white font-semibold text-xl group">
-            <Plane className="w-6 h-6 text-luxury-teal transition-transform duration-300 group-hover:translate-x-1" />
+            <img src="/Logo test.png" alt="Fitinerary" className="w-8 h-8 transition-transform duration-300 group-hover:scale-110" />
             <span>Fitinerary</span>
           </Link>
 
