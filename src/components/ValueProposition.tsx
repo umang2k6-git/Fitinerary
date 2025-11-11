@@ -1,4 +1,4 @@
-import { MapPin, Compass, Lightbulb, Sparkles } from 'lucide-react';
+import { MapPin, User, Sparkles } from 'lucide-react';
 
 interface Feature {
   icon: typeof MapPin;
@@ -22,16 +22,10 @@ export default function ValueProposition() {
       color: 'bg-luxury-orange',
     },
     {
-      icon: Compass,
-      title: 'Immersive Cultural Experiences',
-      description: 'Dive deep into local cultures with authentic experiences and hidden gems only locals know.',
+      icon: User,
+      title: 'Personalized Itineraries',
+      description: 'Travel plans uniquely crafted to match your style, interests, and budget for unforgettable adventures.',
       color: 'bg-luxury-teal',
-    },
-    {
-      icon: Lightbulb,
-      title: 'Expert Travel Tips',
-      description: 'Get insider knowledge and recommendations from seasoned travelers and local experts.',
-      color: 'bg-luxury-orange',
     },
   ];
 
@@ -47,7 +41,7 @@ export default function ValueProposition() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
