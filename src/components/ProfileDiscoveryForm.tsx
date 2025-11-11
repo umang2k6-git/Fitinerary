@@ -84,6 +84,32 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
     e.preventDefault();
     if (!user) return;
 
+    // Validate required fields
+    if (!formData.start_city || !formData.destination_city) {
+      alert('Please fill in both starting point and destination.');
+      return;
+    }
+
+    if (!formData.trip_start_date || !formData.trip_end_date) {
+      alert('Please select your trip dates.');
+      return;
+    }
+
+    if (formData.budget_max <= 0) {
+      alert('Please set a valid budget.');
+      return;
+    }
+
+    if (formData.preferred_activities.length === 0) {
+      alert('Please select at least one preferred activity.');
+      return;
+    }
+
+    if (formData.special_interests.length === 0) {
+      alert('Please select at least one special interest.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -93,12 +119,18 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
         .eq('user_id', user.id)
         .maybeSingle();
 
+      // Set minimum budget as a percentage of max budget
+      const minBudget = Math.floor(formData.budget_max * 0.5);
+
       const profileData = {
         user_id: user.id,
         ...formData,
+        budget_min: minBudget,
         profile_completed: true,
         updated_at: new Date().toISOString()
       };
+
+      console.log('Saving profile data:', profileData);
 
       if (existingProfile) {
         const { error } = await supabase
@@ -106,43 +138,85 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           .update(profileData)
           .eq('user_id', user.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Database error:', error);
+          throw new Error('Failed to save profile. Please try again.');
+        }
       } else {
         const { error } = await supabase
           .from('user_profiles')
           .insert(profileData);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Database error:', error);
+          throw new Error('Failed to create profile. Please try again.');
+        }
       }
 
       const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error('Authentication session expired. Please log in again.');
+      }
+
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-package-variations`;
 
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      console.log('Calling API:', apiUrl);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('API Error:', errorData);
-        throw new Error(errorData.error || 'Failed to generate packages');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API Error Response:', errorText);
+
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch {
+            errorData = { error: 'Server error occurred' };
+          }
+
+          throw new Error(errorData.error || `Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('API Response:', data);
+
+        if (!data.packages || data.packages.length === 0) {
+          throw new Error('No packages were generated. Please try again.');
+        }
+
+        setPackages(data.packages);
+        setShowPackages(true);
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Request timed out. The server is taking too long to respond. Please try again.');
+        }
+
+        if (fetchError.message.includes('fetch')) {
+          throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
+        }
+
+        throw fetchError;
       }
-
-      const data = await response.json();
-
-      if (!data.packages || data.packages.length === 0) {
-        throw new Error('No packages were generated. Please try again.');
-      }
-
-      setPackages(data.packages);
-      setShowPackages(true);
     } catch (error: any) {
       console.error('Error generating packages:', error);
-      const errorMessage = error.message || 'Failed to generate travel packages. Please ensure all fields are filled correctly and try again.';
+      const errorMessage = error.message || 'Failed to generate travel packages. Please try again.';
       alert(errorMessage);
     } finally {
       setLoading(false);
