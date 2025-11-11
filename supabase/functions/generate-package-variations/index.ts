@@ -44,10 +44,6 @@ Deno.serve(async (req: Request) => {
       throw new Error("Profile not found");
     }
 
-    if (!profile.start_city || !profile.destination_city) {
-      throw new Error("Starting point and destination are required");
-    }
-
     const tripDuration = Math.ceil(
       (new Date(profile.trip_end_date).getTime() - new Date(profile.trip_start_date).getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -58,11 +54,13 @@ Deno.serve(async (req: Request) => {
       luxe: 1.5
     };
 
-    const generatePackage = async (tier: string, multiplier: number) => {
+    const packages = [];
+
+    for (const [tier, multiplier] of Object.entries(budgetMultipliers)) {
       const adjustedBudgetMin = Math.floor(profile.budget_min * multiplier);
       const adjustedBudgetMax = Math.floor(profile.budget_max * multiplier);
 
-      const systemPrompt = `You are an expert travel planner for India. Generate a realistic, detailed ${tier} travel package itinerary based on actual places and experiences in ${profile.destination_city}.
+      const systemPrompt = `You are an expert travel planner. Generate a detailed ${tier} travel package itinerary.
 
 User Profile:
 - Starting Point: ${profile.start_city}
@@ -78,25 +76,26 @@ User Profile:
 - Dietary Restrictions: ${profile.dietary_restrictions || 'None'}
 - Accessibility Requirements: ${profile.accessibility_requirements || 'None'}
 
-IMPORTANT REQUIREMENTS:
-1. Focus heavily on the user's Special Interests (${profile.special_interests?.join(', ') || 'general experiences'})
-2. Include actual places, restaurants, and attractions in ${profile.destination_city}
-3. Make costs realistic for India (use actual price ranges)
-4. Ensure total cost fits within the budget range
-5. Plan ${tripDuration} days of activities
-6. Tailor activities to ${profile.travel_purpose} travelers
+Generate a ${tier.toUpperCase()} package with:
+1. Package name and tagline
+2. Day-by-day detailed itinerary
+3. Accommodation recommendations
+4. Dining suggestions
+5. Transportation details
+6. Estimated cost breakdown
+7. Highlights and unique experiences
 
 For ${tier} tier:
-${tier === 'budget' ? '- Hostels/budget hotels (₹800-2000/night)\n- Local transport, street food\n- Free/low-cost activities (parks, temples, markets)\n- Total: ~₹5000-8000/day' : ''}
-${tier === 'balanced' ? '- Mid-range hotels (₹3000-6000/night)\n- Mix of transport, local restaurants\n- Popular attractions, some unique experiences\n- Total: ~₹8000-15000/day' : ''}
-${tier === 'luxe' ? '- Premium hotels/resorts (₹8000-20000/night)\n- Private transport, fine dining\n- Exclusive experiences, spa, VIP access\n- Total: ~₹15000-30000/day' : ''}
+${tier === 'budget' ? '- Focus on cost-effective options, hostels/budget hotels, local transport, street food\n- Include free activities and budget-friendly experiences' : ''}
+${tier === 'balanced' ? '- Mix of comfort and value, mid-range hotels, mix of transport options\n- Balance between popular attractions and local experiences' : ''}
+${tier === 'luxe' ? '- Premium accommodations, private transport, fine dining\n- Exclusive experiences, VIP access, personalized services' : ''}
 
-Format as JSON:
+Format the response as JSON with this structure:
 {
-  "packageName": "Catchy name for ${profile.destination_city} trip",
-  "tagline": "One-line tagline",
+  "packageName": "string",
+  "tagline": "string",
   "tier": "${tier}",
-  "totalCost": ${adjustedBudgetMin + Math.floor((adjustedBudgetMax - adjustedBudgetMin) * 0.6)},
+  "totalCost": number,
   "costBreakdown": {
     "accommodation": number,
     "dining": number,
@@ -104,33 +103,33 @@ Format as JSON:
     "activities": number,
     "miscellaneous": number
   },
-  "highlights": ["5-6 key highlights matching user interests"],
+  "highlights": ["string"],
   "accommodation": {
-    "type": "Hotel type",
-    "recommendations": ["2-3 actual hotel names in ${profile.destination_city}"]
+    "type": "string",
+    "recommendations": ["string"]
   },
   "transportation": {
-    "mode": "Transport type",
-    "details": "Brief details"
+    "mode": "string",
+    "details": "string"
   },
   "itinerary": [
     {
-      "day": 1,
-      "title": "Day title",
+      "day": number,
+      "title": "string",
       "activities": [
         {
-          "time": "09:00 AM",
-          "activity": "Activity name",
-          "description": "1-line description",
-          "cost": 500
+          "time": "string",
+          "activity": "string",
+          "description": "string",
+          "cost": number
         }
       ],
       "meals": {
-        "breakfast": "Restaurant/Hotel name",
-        "lunch": "Restaurant name",
-        "dinner": "Restaurant name"
+        "breakfast": "string",
+        "lunch": "string",
+        "dinner": "string"
       },
-      "accommodation": "Hotel name"
+      "accommodation": "string"
     }
   ]
 }`;
@@ -145,29 +144,21 @@ Format as JSON:
           model: "gpt-4o-mini",
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: "Generate the travel package itinerary with realistic Indian places and costs." }
+            { role: "user", content: "Generate the travel package itinerary." }
           ],
-          temperature: 0.7,
-          max_tokens: 2500,
+          temperature: 0.8,
           response_format: { type: "json_object" }
         }),
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`OpenAI API error: ${response.statusText} - ${errorText}`);
+        throw new Error(`OpenAI API error: ${response.statusText}`);
       }
 
       const data = await response.json();
       const packageData = JSON.parse(data.choices[0].message.content);
-      return packageData;
-    };
-
-    const packagePromises = Object.entries(budgetMultipliers).map(([tier, multiplier]) =>
-      generatePackage(tier, multiplier)
-    );
-
-    const packages = await Promise.all(packagePromises);
+      packages.push(packageData);
+    }
 
     return new Response(
       JSON.stringify({ packages }),
@@ -181,7 +172,7 @@ Format as JSON:
   } catch (error) {
     console.error("Error generating packages:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Failed to generate packages" }),
+      JSON.stringify({ error: error.message }),
       {
         status: 500,
         headers: {
