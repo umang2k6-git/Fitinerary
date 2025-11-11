@@ -38,9 +38,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
     travel_purpose: 'Solo' as 'Solo' | 'Couple' | 'Family',
     budget_min: 5000,
     budget_max: 100000,
-    accommodation_style: 'balanced',
     dining_preference: 'mix',
-    travel_pace: 'moderate' as 'relaxed' | 'moderate' | 'packed',
     accessibility_requirements: '',
     dietary_restrictions: '',
     preferred_activities: [] as string[],
@@ -70,9 +68,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           travel_purpose: data.travel_purpose || 'Solo',
           budget_min: data.budget_min || 5000,
           budget_max: data.budget_max || 50000,
-          accommodation_style: data.accommodation_style || 'balanced',
           dining_preference: data.dining_preference || 'mix',
-          travel_pace: data.travel_pace || 'moderate',
           accessibility_requirements: data.accessibility_requirements || '',
           dietary_restrictions: data.dietary_restrictions || '',
           preferred_activities: data.preferred_activities || [],
@@ -162,12 +158,22 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
   };
 
   const handleActivityToggle = (activity: string) => {
-    setFormData(prev => ({
-      ...prev,
-      preferred_activities: prev.preferred_activities.includes(activity)
-        ? prev.preferred_activities.filter(a => a !== activity)
-        : [...prev.preferred_activities, activity]
-    }));
+    setFormData(prev => {
+      if (prev.preferred_activities.includes(activity)) {
+        return {
+          ...prev,
+          preferred_activities: prev.preferred_activities.filter(a => a !== activity)
+        };
+      } else {
+        if (prev.preferred_activities.length >= 3) {
+          return prev;
+        }
+        return {
+          ...prev,
+          preferred_activities: [...prev.preferred_activities, activity]
+        };
+      }
+    });
   };
 
   const activityOptions = [
@@ -183,7 +189,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
     'Historical Sites'
   ];
 
-  const totalSteps = 3;
+  const totalSteps = 2;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -204,7 +210,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           </div>
 
           <div className="flex gap-2 mt-4">
-            {[1, 2, 3].map(step => (
+            {[1, 2].map(step => (
               <div
                 key={step}
                 className={`h-2 flex-1 rounded-full transition-colors ${
@@ -344,24 +350,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Travel Preferences</h3>
 
               <div>
-                <label htmlFor="accommodation_style" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Accommodation Style *
-                </label>
-                <select
-                  id="accommodation_style"
-                  name="accommodation_style"
-                  value={formData.accommodation_style}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white"
-                  required
-                >
-                  <option value="budget">Budget</option>
-                  <option value="balanced">Balanced</option>
-                  <option value="luxe">Luxe</option>
-                </select>
-              </div>
-
-              <div>
                 <label htmlFor="dining_preference" className="block text-sm font-semibold text-gray-700 mb-2">
                   Dining Preference *
                 </label>
@@ -381,43 +369,53 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
               </div>
 
               <div>
-                <label htmlFor="travel_pace" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Travel Pace *
-                </label>
-                <select
-                  id="travel_pace"
-                  name="travel_pace"
-                  value={formData.travel_pace}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white"
-                  required
-                >
-                  <option value="relaxed">Relaxed (1-2 activities per day)</option>
-                  <option value="moderate">Moderate (2-3 activities per day)</option>
-                  <option value="packed">Packed (3+ activities per day)</option>
-                </select>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Preferred Activities *
+                  </label>
+                  <span className={`text-sm font-semibold ${
+                    formData.preferred_activities.length >= 3 ? 'text-luxury-teal' : 'text-gray-500'
+                  }`}>
+                    {formData.preferred_activities.length}/3
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">Select up to 3 activities you enjoy most</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {activityOptions.map(activity => {
+                    const isSelected = formData.preferred_activities.includes(activity);
+                    const isDisabled = !isSelected && formData.preferred_activities.length >= 3;
+
+                    return (
+                      <button
+                        key={activity}
+                        type="button"
+                        onClick={() => handleActivityToggle(activity)}
+                        disabled={isDisabled}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                          isSelected
+                            ? 'bg-luxury-teal text-white'
+                            : isDisabled
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {activity}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Preferred Activities
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {activityOptions.map(activity => (
-                    <button
-                      key={activity}
-                      type="button"
-                      onClick={() => handleActivityToggle(activity)}
-                      className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        formData.preferred_activities.includes(activity)
-                          ? 'bg-luxury-teal text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {activity}
-                    </button>
-                  ))}
-                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2 mt-8">Special Interests</h3>
+                <p className="text-gray-600 mb-4">
+                  Select the types of experiences you love. This helps us personalize your itineraries.
+                </p>
+
+                <InterestTagSelector
+                  selectedTags={formData.special_interests}
+                  onChange={(tags) => setFormData(prev => ({ ...prev, special_interests: tags }))}
+                />
               </div>
 
               <div>
@@ -449,20 +447,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all resize-none"
                 />
               </div>
-            </div>
-          )}
-
-          {currentStep === 3 && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Special Interests</h3>
-              <p className="text-gray-600 mb-4">
-                Select the types of experiences you love. This helps us personalize your itineraries.
-              </p>
-
-              <InterestTagSelector
-                selectedTags={formData.special_interests}
-                onChange={(tags) => setFormData(prev => ({ ...prev, special_interests: tags }))}
-              />
             </div>
           )}
 
@@ -499,7 +483,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   e.stopPropagation();
                   setCurrentStep(prev => prev + 1);
                 }}
-                className="flex-1 btn-primary flex items-center justify-center gap-2"
+                className="flex-1 bg-gradient-to-r from-luxury-teal to-emerald-500 text-white px-8 py-3 rounded-xl font-semibold hover:from-luxury-teal/90 hover:to-emerald-500/90 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
               >
                 Next
                 <ChevronRight className="w-5 h-5" />
@@ -508,12 +492,12 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 btn-primary flex items-center justify-center gap-2"
+                className="flex-1 bg-gradient-to-r from-luxury-teal to-emerald-500 text-white px-8 py-3 rounded-xl font-semibold hover:from-luxury-teal/90 hover:to-emerald-500/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Generating...
+                    Generating Your Perfect Itinerary...
                   </>
                 ) : (
                   <>

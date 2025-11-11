@@ -78,21 +78,21 @@ User Profile:
 - Trip Duration: ${tripDuration} days (${profile.trip_start_date} to ${profile.trip_end_date})
 - Traveling With: ${profile.travel_purpose}
 - Budget Range: ₹${adjustedBudgetMin.toLocaleString()} - ₹${adjustedBudgetMax.toLocaleString()}
-- Accommodation Style: ${profile.accommodation_style}
 - Dining Preference: ${profile.dining_preference}
-- Travel Pace: ${profile.travel_pace}
-- Preferred Activities: ${profile.preferred_activities?.join(', ') || 'Not specified'}
-- Special Interests (PRIORITIZE THESE): ${profile.special_interests?.join(', ') || 'Not specified'}
+- Preferred Activities (max 3): ${profile.preferred_activities?.join(', ') || 'Not specified'}
+- Special Interests (max 3, PRIORITIZE THESE): ${profile.special_interests?.join(', ') || 'Not specified'}
 - Dietary Restrictions: ${profile.dietary_restrictions || 'None'}
 - Accessibility Requirements: ${profile.accessibility_requirements || 'None'}
 
 CRITICAL REQUIREMENTS:
-1. HEAVILY focus on user's Special Interests: ${profile.special_interests?.join(', ') || 'general experiences'}
-2. Include actual places, restaurants, and attractions in ${profile.destination_city}
-3. Make costs realistic for India
-4. Total cost must fit within ₹${adjustedBudgetMin} - ₹${adjustedBudgetMax}
-5. Plan exactly ${tripDuration} days of activities
-6. Tailor to ${profile.travel_purpose} travelers
+1. HEAVILY focus on user's Special Interests (up to 3 selected): ${profile.special_interests?.join(', ') || 'general experiences'}
+2. Include user's Preferred Activities (up to 3 selected): ${profile.preferred_activities?.join(', ') || 'various activities'}
+3. Use actual places, restaurants, and attractions in ${profile.destination_city}
+4. Make costs realistic for India
+5. Total cost must fit within ₹${adjustedBudgetMin} - ₹${adjustedBudgetMax}
+6. Plan exactly ${tripDuration} days of activities
+7. Tailor to ${profile.travel_purpose} travelers
+8. Match dining preference: ${profile.dining_preference}
 
 For ${tier} tier:
 ${tier === 'budget' ? '- Budget hotels (₹800-2000/night)\n- Local transport, street food\n- Free activities, temples, markets' : ''}
@@ -180,14 +180,15 @@ Respond with JSON only:
 
       const details = tierDetails[tier as keyof typeof tierDetails];
       const interests = profile.special_interests || [];
+      const activities = profile.preferred_activities || [];
       
       const highlights = [
-        `Personalized ${interests[0] || 'sightseeing'} experiences`,
-        `Best ${interests[1] || 'cultural'} spots in ${profile.destination_city}`,
-        `${interests[2] || 'Local'} cuisine tasting tours`,
+        `Personalized ${interests[0] || activities[0] || 'sightseeing'} experiences`,
+        `Best ${interests[1] || activities[1] || 'cultural'} spots in ${profile.destination_city}`,
+        `${interests[2] || activities[2] || 'Local'} cuisine tasting tours`,
         `${tier === 'luxe' ? 'VIP' : tier === 'balanced' ? 'Curated' : 'Authentic'} local experiences`,
-        `${profile.accommodation_style} accommodation options`,
-        `Flexible ${profile.travel_pace} pace itinerary`
+        `${profile.dining_preference === 'fine-dining' ? 'Premium' : profile.dining_preference === 'street-food' ? 'Street food' : 'Diverse'} dining experiences`,
+        `Comfortable ${tier} tier accommodations`
       ];
 
       const itinerary = [];
@@ -195,26 +196,26 @@ Respond with JSON only:
         const dayActivities = [
           {
             time: "09:00 AM",
-            activity: interests[0] ? `${interests[0]} Experience` : "Morning Sightseeing",
-            description: `Explore the best ${interests[0] || 'attractions'} in ${profile.destination_city}`,
+            activity: interests[0] || activities[0] || "Morning Sightseeing",
+            description: `Explore the best ${interests[0] || activities[0] || 'attractions'} in ${profile.destination_city}`,
             cost: tier === 'luxe' ? 2000 : tier === 'balanced' ? 1000 : 500
           },
           {
             time: "12:30 PM",
             activity: "Local Cuisine Lunch",
-            description: `Authentic ${profile.destination_city} delicacies at popular local spots`,
+            description: `Authentic ${profile.destination_city} delicacies at ${profile.dining_preference === 'fine-dining' ? 'premium restaurants' : profile.dining_preference === 'street-food' ? 'famous street food spots' : 'popular local eateries'}`,
             cost: tier === 'luxe' ? 1500 : tier === 'balanced' ? 800 : 400
           },
           {
             time: "02:30 PM",
-            activity: interests[1] ? `${interests[1]} Activity` : "Afternoon Adventure",
-            description: `Immersive ${interests[1] || 'cultural'} experience`,
+            activity: interests[1] || activities[1] || "Afternoon Adventure",
+            description: `Immersive ${interests[1] || activities[1] || 'cultural'} experience`,
             cost: tier === 'luxe' ? 3000 : tier === 'balanced' ? 1500 : 700
           },
           {
             time: "06:00 PM",
-            activity: interests[2] ? `Evening ${interests[2]}` : "Sunset Experience",
-            description: `Enjoy ${interests[2] || 'scenic views'} as the sun sets`,
+            activity: interests[2] || activities[2] || "Sunset Experience",
+            description: `Enjoy ${interests[2] || activities[2] || 'scenic views'} as the sun sets`,
             cost: tier === 'luxe' ? 2500 : tier === 'balanced' ? 1200 : 500
           }
         ];
