@@ -20,7 +20,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
     trip_end_date: '',
     travel_purpose: 'Solo' as 'Solo' | 'Couple' | 'Family',
     budget_min: 5000,
-    budget_max: 50000,
+    budget_max: 100000,
     accommodation_style: 'balanced',
     dining_preference: 'mix',
     travel_pace: 'moderate' as 'relaxed' | 'moderate' | 'packed',
@@ -247,21 +247,43 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
 
               <div>
                 <label htmlFor="budget_max" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Maximum Budget (₹) *
+                  Maximum Budget *
                 </label>
-                <input
-                  type="number"
-                  id="budget_max"
-                  name="budget_max"
-                  value={formData.budget_max}
-                  onChange={(e) => setFormData(prev => ({ ...prev, budget_max: parseInt(e.target.value) || 0 }))}
-                  min="5000"
-                  step="1000"
-                  placeholder="Enter your maximum budget"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-2">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-3xl font-bold text-luxury-teal">
+                      ₹{formData.budget_max.toLocaleString('en-IN')}
+                    </span>
+                    <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                      {formData.budget_max === 0 ? 'No budget set' : formData.budget_max >= 1000000 ? '10 Lakhs' : `${(formData.budget_max / 100000).toFixed(1)} Lakhs`}
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="range"
+                      id="budget_max"
+                      name="budget_max"
+                      value={formData.budget_max}
+                      onChange={(e) => setFormData(prev => ({ ...prev, budget_max: parseInt(e.target.value) || 0 }))}
+                      min="0"
+                      max="1000000"
+                      step="10000"
+                      className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-luxury"
+                      style={{
+                        background: `linear-gradient(to right, #14B8A6 0%, #10B981 ${(formData.budget_max / 1000000) * 100}%, #E5E7EB ${(formData.budget_max / 1000000) * 100}%, #E5E7EB 100%)`
+                      }}
+                      required
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500 font-medium">
+                    <span>₹0</span>
+                    <span>₹2.5L</span>
+                    <span>₹5L</span>
+                    <span>₹7.5L</span>
+                    <span>₹10L</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-3">
                   Your preferred maximum budget cap for weekend trips
                 </p>
               </div>
