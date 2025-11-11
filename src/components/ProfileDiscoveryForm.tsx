@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Save, Loader2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { X, Loader2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import InterestTagSelector from './InterestTagSelector';
 import CityAutocomplete from './CityAutocomplete';
 
 interface ProfileDiscoveryFormProps {
@@ -29,7 +28,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
     accessibility_requirements: '',
     dietary_restrictions: '',
     preferred_activities: [] as string[],
-    special_interests: [] as string[],
   });
 
   useEffect(() => {
@@ -61,7 +59,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           accessibility_requirements: data.accessibility_requirements || '',
           dietary_restrictions: data.dietary_restrictions || '',
           preferred_activities: data.preferred_activities || [],
-          special_interests: data.special_interests || [],
         });
       }
     } catch (error) {
@@ -143,7 +140,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
     'Historical Sites'
   ];
 
-  const totalSteps = 3;
+  const totalSteps = 2;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -164,7 +161,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           </div>
 
           <div className="flex gap-2 mt-4">
-            {[1, 2, 3].map(step => (
+            {[1, 2].map(step => (
               <div
                 key={step}
                 className={`h-2 flex-1 rounded-full transition-colors ${
@@ -412,20 +409,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
             </div>
           )}
 
-          {currentStep === 3 && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Special Interests</h3>
-              <p className="text-gray-600 mb-4">
-                Select the types of experiences you love. This helps us personalize your itineraries.
-              </p>
-
-              <InterestTagSelector
-                selectedTags={formData.special_interests}
-                onChange={(tags) => setFormData(prev => ({ ...prev, special_interests: tags }))}
-              />
-            </div>
-          )}
-
           <div className="flex gap-3 pt-6 mt-6 border-t border-gray-200">
             {currentStep > 1 && (
               <button
@@ -473,13 +456,10 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Saving...
+                    Generating your Fitinerary...
                   </>
                 ) : (
-                  <>
-                    <Save className="w-5 h-5" />
-                    Save Profile
-                  </>
+                  'Generate my Fitinerary'
                 )}
               </button>
             )}
