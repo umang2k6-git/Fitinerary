@@ -6,7 +6,7 @@ export default function Discovery() {
   const navigate = useNavigate();
 
   const handleFormClose = () => {
-    navigate('/');
+    navigate('/personalized-destinations');
   };
 
   return (
