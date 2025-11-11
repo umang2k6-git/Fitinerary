@@ -18,6 +18,7 @@ interface InterestTagSelectorProps {
 export default function InterestTagSelector({ selectedTags, onChange }: InterestTagSelectorProps) {
   const [tags, setTags] = useState<InterestTag[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {
     fetchTags();
@@ -37,13 +38,16 @@ export default function InterestTagSelector({ selectedTags, onChange }: Interest
     setLoading(false);
   };
 
+  const categories = ['all', ...Array.from(new Set(tags.map(tag => tag.category)))];
+
+  const filteredTags = selectedCategory === 'all'
+    ? tags
+    : tags.filter(tag => tag.category === selectedCategory);
+
   const toggleTag = (tagName: string) => {
     if (selectedTags.includes(tagName)) {
       onChange(selectedTags.filter(t => t !== tagName));
     } else {
-      if (selectedTags.length >= 3) {
-        return;
-      }
       onChange([...selectedTags, tagName]);
     }
   };
@@ -62,36 +66,40 @@ export default function InterestTagSelector({ selectedTags, onChange }: Interest
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center mb-2">
-        <p className="text-sm text-gray-600">
-          Select up to 3 types of experiences for personalization
-        </p>
-        <span className={`text-sm font-semibold ${selectedTags.length >= 3 ? 'text-luxury-teal' : 'text-gray-500'}`}>
-          {selectedTags.length}/3
-        </span>
+      <div className="flex flex-wrap gap-2">
+        {categories.map(category => (
+          <button
+            key={category}
+            type="button"
+            onClick={() => setSelectedCategory(category)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${
+              selectedCategory === category
+                ? 'bg-luxury-teal text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {category}
+          </button>
+        ))}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        {tags.map(tag => {
+        {filteredTags.map(tag => {
           const IconComponent = getIcon(tag.icon);
           const isSelected = selectedTags.includes(tag.name);
-          const isDisabled = !isSelected && selectedTags.length >= 3;
 
           return (
             <button
               key={tag.id}
               type="button"
               onClick={() => toggleTag(tag.name)}
-              disabled={isDisabled}
               className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
                 isSelected
                   ? 'border-luxury-teal bg-luxury-teal/10 text-luxury-teal'
-                  : isDisabled
-                  ? 'border-gray-200 text-gray-400 cursor-not-allowed opacity-50'
                   : 'border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <IconComponent className={`w-6 h-6 ${isSelected ? 'text-luxury-teal' : isDisabled ? 'text-gray-400' : 'text-gray-600'}`} />
+              <IconComponent className={`w-6 h-6 ${isSelected ? 'text-luxury-teal' : 'text-gray-600'}`} />
               <span className="text-sm font-medium text-center">{tag.name}</span>
             </button>
           );
@@ -100,7 +108,7 @@ export default function InterestTagSelector({ selectedTags, onChange }: Interest
 
       {selectedTags.length > 0 && (
         <div className="pt-2">
-          <p className="text-sm text-gray-600 mb-2">Selected interests ({selectedTags.length}/3):</p>
+          <p className="text-sm text-gray-600 mb-2">Selected interests ({selectedTags.length}):</p>
           <div className="flex flex-wrap gap-2">
             {selectedTags.map(tagName => {
               const tag = tags.find(t => t.name === tagName);

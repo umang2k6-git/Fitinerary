@@ -61,27 +61,14 @@ export default function WeatherForecast({ destination, country, startDate, endDa
       );
 
       if (!response.ok) {
-        console.error('Weather API error status:', response.status);
-
-        if (response.status === 401) {
-          throw new Error('Session expired. Please refresh the page.');
-        } else if (response.status >= 500) {
-          throw new Error('Weather service temporarily unavailable');
-        }
-
         throw new Error('Failed to fetch weather forecast');
       }
 
       const data = await response.json();
       setForecasts(data.forecasts || []);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching weather:', err);
-
-      if (err.message?.includes('fetch') || err.message?.includes('network')) {
-        setError('Unable to connect. Please check your internet connection.');
-      } else {
-        setError(err.message || 'Unable to load weather forecast');
-      }
+      setError('Unable to load weather forecast');
     } finally {
       setLoading(false);
     }

@@ -1,27 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Search, ChevronRight, ChevronLeft } from 'lucide-react';
+import { X, Save, Loader2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import InterestTagSelector from './InterestTagSelector';
-import CityAutocomplete from './CityAutocomplete';
-import PackageCards from './PackageCards';
-import LoadingLogo from './LoadingLogo';
 
 interface ProfileDiscoveryFormProps {
   onClose: () => void;
-}
-
-interface Package {
-  packageName: string;
-  tagline: string;
-  tier: string;
-  totalCost: number;
-  costBreakdown: any;
-  highlights: string[];
-  accommodation: any;
-  transportation: any;
-  itinerary: any[];
 }
 
 export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormProps) {
@@ -29,17 +14,16 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [showPackages, setShowPackages] = useState(false);
-  const [packages, setPackages] = useState<Package[]>([]);
   const [formData, setFormData] = useState({
     start_city: '',
-    destination_city: '',
     trip_start_date: '',
     trip_end_date: '',
     travel_purpose: 'Solo' as 'Solo' | 'Couple' | 'Family',
     budget_min: 5000,
-    budget_max: 100000,
+    budget_max: 50000,
+    accommodation_style: 'balanced',
     dining_preference: 'mix',
+    travel_pace: 'moderate' as 'relaxed' | 'moderate' | 'packed',
     accessibility_requirements: '',
     dietary_restrictions: '',
     preferred_activities: [] as string[],
@@ -63,13 +47,14 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
       if (data) {
         setFormData({
           start_city: data.start_city || '',
-          destination_city: data.destination_city || '',
           trip_start_date: data.trip_start_date || '',
           trip_end_date: data.trip_end_date || '',
           travel_purpose: data.travel_purpose || 'Solo',
           budget_min: data.budget_min || 5000,
           budget_max: data.budget_max || 50000,
+          accommodation_style: data.accommodation_style || 'balanced',
           dining_preference: data.dining_preference || 'mix',
+          travel_pace: data.travel_pace || 'moderate',
           accessibility_requirements: data.accessibility_requirements || '',
           dietary_restrictions: data.dietary_restrictions || '',
           preferred_activities: data.preferred_activities || [],
@@ -85,32 +70,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
     e.preventDefault();
     if (!user) return;
 
-    // Validate required fields
-    if (!formData.start_city || !formData.destination_city) {
-      alert('Please fill in both starting point and destination.');
-      return;
-    }
-
-    if (!formData.trip_start_date || !formData.trip_end_date) {
-      alert('Please select your trip dates.');
-      return;
-    }
-
-    if (formData.budget_max <= 0) {
-      alert('Please set a valid budget.');
-      return;
-    }
-
-    if (formData.preferred_activities.length === 0) {
-      alert('Please select at least one preferred activity.');
-      return;
-    }
-
-    if (formData.special_interests.length === 0) {
-      alert('Please select at least one special interest.');
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -120,18 +79,12 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
         .eq('user_id', user.id)
         .maybeSingle();
 
-      // Set minimum budget as a percentage of max budget
-      const minBudget = Math.floor(formData.budget_max * 0.5);
-
       const profileData = {
         user_id: user.id,
         ...formData,
-        budget_min: minBudget,
         profile_completed: true,
         updated_at: new Date().toISOString()
       };
-
-      console.log('Saving profile data:', profileData);
 
       if (existingProfile) {
         const { error } = await supabase
@@ -139,100 +92,19 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           .update(profileData)
           .eq('user_id', user.id);
 
-        if (error) {
-          console.error('Database error:', error);
-          throw new Error('Failed to save profile. Please try again.');
-        }
+        if (error) throw error;
       } else {
         const { error } = await supabase
           .from('user_profiles')
           .insert(profileData);
 
-        if (error) {
-          console.error('Database error:', error);
-          throw new Error('Failed to create profile. Please try again.');
-        }
+        if (error) throw error;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error('Authentication session expired. Please log in again.');
-      }
-
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-package-variations`;
-
-      console.log('Calling API:', apiUrl);
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-
-      try {
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          console.error('API Error Response Status:', response.status);
-
-          let errorData;
-          try {
-            const errorText = await response.text();
-            console.error('API Error Response Body:', errorText);
-            errorData = JSON.parse(errorText);
-          } catch (parseError) {
-            console.error('Failed to parse error response:', parseError);
-            errorData = { error: `Server returned ${response.status} error. Please try again.` };
-          }
-
-          if (response.status === 401) {
-            throw new Error('Your session has expired. Please refresh the page and try again.');
-          } else if (response.status === 500) {
-            throw new Error('The server encountered an error. Our team has been notified. Please try again in a few moments.');
-          } else if (response.status >= 400 && response.status < 500) {
-            throw new Error(errorData.error || `Request failed: ${response.status}. Please check your information and try again.`);
-          }
-
-          throw new Error(errorData.error || 'An unexpected error occurred. Please try again.');
-        }
-
-        const data = await response.json();
-        console.log('API Response:', data);
-
-        if (!data.packages || data.packages.length === 0) {
-          throw new Error('No packages were generated. Please try again.');
-        }
-
-        setPackages(data.packages);
-        setShowPackages(true);
-      } catch (fetchError: any) {
-        clearTimeout(timeoutId);
-
-        if (fetchError.name === 'AbortError') {
-          throw new Error('Request timed out. The server is taking too long to respond. Please try again.');
-        }
-
-        if (fetchError.message.includes('fetch') || fetchError.message.includes('network') || fetchError.message.includes('Failed to fetch')) {
-          throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
-        }
-
-        if (fetchError.message.includes('CORS')) {
-          throw new Error('Connection blocked. Please ensure you have a stable internet connection and try again.');
-        }
-
-        throw fetchError;
-      }
-    } catch (error: any) {
-      console.error('Error generating packages:', error);
-      const errorMessage = error.message || 'Failed to generate travel packages. Please try again.';
-      alert(errorMessage);
+      onClose();
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Failed to save profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -247,22 +119,12 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
   };
 
   const handleActivityToggle = (activity: string) => {
-    setFormData(prev => {
-      if (prev.preferred_activities.includes(activity)) {
-        return {
-          ...prev,
-          preferred_activities: prev.preferred_activities.filter(a => a !== activity)
-        };
-      } else {
-        if (prev.preferred_activities.length >= 3) {
-          return prev;
-        }
-        return {
-          ...prev,
-          preferred_activities: [...prev.preferred_activities, activity]
-        };
-      }
-    });
+    setFormData(prev => ({
+      ...prev,
+      preferred_activities: prev.preferred_activities.includes(activity)
+        ? prev.preferred_activities.filter(a => a !== activity)
+        : [...prev.preferred_activities, activity]
+    }));
   };
 
   const activityOptions = [
@@ -278,19 +140,10 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
     'Historical Sites'
   ];
 
-  const totalSteps = 2;
+  const totalSteps = 3;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      {loading && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60]">
-          <div className="text-center">
-            <LoadingLogo />
-            <p className="text-white text-lg mt-6 font-light">Generating Your Perfect Itinerary...</p>
-          </div>
-        </div>
-      )}
-
       <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl my-8">
         <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-3xl z-10">
           <div className="flex items-center justify-between">
@@ -308,7 +161,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           </div>
 
           <div className="flex gap-2 mt-4">
-            {[1, 2].map(step => (
+            {[1, 2, 3].map(step => (
               <div
                 key={step}
                 className={`h-2 flex-1 rounded-full transition-colors ${
@@ -324,24 +177,18 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
             <div className="space-y-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Basic Information</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <CityAutocomplete
+              <div>
+                <label htmlFor="start_city" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Home City *
+                </label>
+                <input
+                  type="text"
                   id="start_city"
                   name="start_city"
                   value={formData.start_city}
-                  onChange={(value) => setFormData(prev => ({ ...prev, start_city: value }))}
-                  placeholder="e.g., Mumbai, Delhi, Bangalore"
-                  label="Starting Trip Point"
-                  required
-                />
-
-                <CityAutocomplete
-                  id="destination_city"
-                  name="destination_city"
-                  value={formData.destination_city}
-                  onChange={(value) => setFormData(prev => ({ ...prev, destination_city: value }))}
-                  placeholder="e.g., Goa, Shimla, Jaipur"
-                  label="Travel Destination"
+                  onChange={handleChange}
+                  placeholder="e.g., New York, London, Tokyo"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all"
                   required
                 />
               </div>
@@ -400,43 +247,21 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
 
               <div>
                 <label htmlFor="budget_max" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Maximum Budget *
+                  Maximum Budget (₹) *
                 </label>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-3xl font-bold text-luxury-teal">
-                      ₹{formData.budget_max.toLocaleString('en-IN')}
-                    </span>
-                    <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                      {formData.budget_max === 0 ? 'No budget set' : formData.budget_max >= 1000000 ? '10 Lakhs' : `${(formData.budget_max / 100000).toFixed(1)} Lakhs`}
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="range"
-                      id="budget_max"
-                      name="budget_max"
-                      value={formData.budget_max}
-                      onChange={(e) => setFormData(prev => ({ ...prev, budget_max: parseInt(e.target.value) || 0 }))}
-                      min="0"
-                      max="1000000"
-                      step="10000"
-                      className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-luxury"
-                      style={{
-                        background: `linear-gradient(to right, #14B8A6 0%, #10B981 ${(formData.budget_max / 1000000) * 100}%, #E5E7EB ${(formData.budget_max / 1000000) * 100}%, #E5E7EB 100%)`
-                      }}
-                      required
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-500 font-medium">
-                    <span>₹0</span>
-                    <span>₹2.5L</span>
-                    <span>₹5L</span>
-                    <span>₹7.5L</span>
-                    <span>₹10L</span>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-3">
+                <input
+                  type="number"
+                  id="budget_max"
+                  name="budget_max"
+                  value={formData.budget_max}
+                  onChange={(e) => setFormData(prev => ({ ...prev, budget_max: parseInt(e.target.value) || 0 }))}
+                  min="5000"
+                  step="1000"
+                  placeholder="Enter your maximum budget"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-2">
                   Your preferred maximum budget cap for weekend trips
                 </p>
               </div>
@@ -446,6 +271,24 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           {currentStep === 2 && (
             <div className="space-y-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Travel Preferences</h3>
+
+              <div>
+                <label htmlFor="accommodation_style" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Accommodation Style *
+                </label>
+                <select
+                  id="accommodation_style"
+                  name="accommodation_style"
+                  value={formData.accommodation_style}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white"
+                  required
+                >
+                  <option value="budget">Budget</option>
+                  <option value="balanced">Balanced</option>
+                  <option value="luxe">Luxe</option>
+                </select>
+              </div>
 
               <div>
                 <label htmlFor="dining_preference" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -467,53 +310,43 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
               </div>
 
               <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Preferred Activities *
-                  </label>
-                  <span className={`text-sm font-semibold ${
-                    formData.preferred_activities.length >= 3 ? 'text-luxury-teal' : 'text-gray-500'
-                  }`}>
-                    {formData.preferred_activities.length}/3
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600 mb-3">Select up to 3 activities you enjoy most</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {activityOptions.map(activity => {
-                    const isSelected = formData.preferred_activities.includes(activity);
-                    const isDisabled = !isSelected && formData.preferred_activities.length >= 3;
-
-                    return (
-                      <button
-                        key={activity}
-                        type="button"
-                        onClick={() => handleActivityToggle(activity)}
-                        disabled={isDisabled}
-                        className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                          isSelected
-                            ? 'bg-luxury-teal text-white'
-                            : isDisabled
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {activity}
-                      </button>
-                    );
-                  })}
-                </div>
+                <label htmlFor="travel_pace" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Travel Pace *
+                </label>
+                <select
+                  id="travel_pace"
+                  name="travel_pace"
+                  value={formData.travel_pace}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white"
+                  required
+                >
+                  <option value="relaxed">Relaxed (1-2 activities per day)</option>
+                  <option value="moderate">Moderate (2-3 activities per day)</option>
+                  <option value="packed">Packed (3+ activities per day)</option>
+                </select>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2 mt-8">Special Interests</h3>
-                <p className="text-gray-600 mb-4">
-                  Select the types of experiences you love. This helps us personalize your itineraries.
-                </p>
-
-                <InterestTagSelector
-                  selectedTags={formData.special_interests}
-                  onChange={(tags) => setFormData(prev => ({ ...prev, special_interests: tags }))}
-                />
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Preferred Activities
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {activityOptions.map(activity => (
+                    <button
+                      key={activity}
+                      type="button"
+                      onClick={() => handleActivityToggle(activity)}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                        formData.preferred_activities.includes(activity)
+                          ? 'bg-luxury-teal text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {activity}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>
@@ -545,6 +378,20 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all resize-none"
                 />
               </div>
+            </div>
+          )}
+
+          {currentStep === 3 && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Special Interests</h3>
+              <p className="text-gray-600 mb-4">
+                Select the types of experiences you love. This helps us personalize your itineraries.
+              </p>
+
+              <InterestTagSelector
+                selectedTags={formData.special_interests}
+                onChange={(tags) => setFormData(prev => ({ ...prev, special_interests: tags }))}
+              />
             </div>
           )}
 
@@ -581,7 +428,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   e.stopPropagation();
                   setCurrentStep(prev => prev + 1);
                 }}
-                className="flex-1 bg-gradient-to-r from-luxury-teal to-emerald-500 text-white px-8 py-3 rounded-xl font-semibold hover:from-luxury-teal/90 hover:to-emerald-500/90 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                className="flex-1 btn-primary flex items-center justify-center gap-2"
               >
                 Next
                 <ChevronRight className="w-5 h-5" />
@@ -590,17 +437,17 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-luxury-teal to-emerald-500 text-white px-8 py-3 rounded-xl font-semibold hover:from-luxury-teal/90 hover:to-emerald-500/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 btn-primary flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Generating Your Perfect Itinerary...
+                    Saving...
                   </>
                 ) : (
                   <>
-                    <Search className="w-5 h-5" />
-                    Search and Plan
+                    <Save className="w-5 h-5" />
+                    Save Profile
                   </>
                 )}
               </button>
@@ -608,16 +455,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           </div>
         </form>
       </div>
-
-      {showPackages && packages.length > 0 && (
-        <PackageCards
-          packages={packages}
-          onClose={() => {
-            setShowPackages(false);
-            onClose();
-          }}
-        />
-      )}
     </div>
   );
 }

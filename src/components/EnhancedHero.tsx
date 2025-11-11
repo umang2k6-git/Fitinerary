@@ -75,19 +75,6 @@ export default function EnhancedHero() {
       >
         <div className="max-w-6xl w-full text-center">
           <div
-            className={`mb-8 transition-all duration-800 delay-100 ${
-              isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-            }`}
-          >
-            <img
-              src="/Fitinerary Logo 2.jpg"
-              alt="Fitinerary - Defining luxury to trip planning"
-              className="mx-auto w-64 md:w-80 lg:w-96 h-auto"
-              style={{ filter: 'drop-shadow(0 8px 40px rgba(0, 0, 0, 0.9))' }}
-            />
-          </div>
-
-          <div
             className={`mb-6 transition-all duration-800 delay-200 ${
               isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
             }`}
