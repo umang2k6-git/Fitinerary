@@ -19,7 +19,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-white font-semibold text-xl group">
-            <img src="/Logo test.png" alt="Fitinerary" className="w-8 h-8 transition-transform duration-300 group-hover:scale-110" />
+            <img src="/Logo 2.png" alt="Fitinerary" className="w-8 h-8 transition-transform duration-300 group-hover:scale-110" />
             <span>Fitinerary</span>
           </Link>
 
