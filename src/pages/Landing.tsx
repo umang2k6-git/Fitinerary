@@ -2,6 +2,7 @@ import EnhancedHero from '../components/EnhancedHero';
 import ValueProposition from '../components/ValueProposition';
 import ActionButtonsCard from '../components/ActionButtonsCard';
 import TestimonialsMarquee from '../components/TestimonialsMarquee';
+import VisitCounter from '../components/VisitCounter';
 import Footer from '../components/Footer';
 
 export default function Landing() {
@@ -29,6 +30,8 @@ export default function Landing() {
       </section>
 
       <TestimonialsMarquee />
+
+      <VisitCounter />
 
       <Footer />
     </div>
