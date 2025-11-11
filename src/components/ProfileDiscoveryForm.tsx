@@ -131,15 +131,23 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate packages');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error:', errorData);
+        throw new Error(errorData.error || 'Failed to generate packages');
       }
 
       const data = await response.json();
+
+      if (!data.packages || data.packages.length === 0) {
+        throw new Error('No packages were generated. Please try again.');
+      }
+
       setPackages(data.packages);
       setShowPackages(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating packages:', error);
-      alert('Failed to generate travel packages. Please try again.');
+      const errorMessage = error.message || 'Failed to generate travel packages. Please ensure all fields are filled correctly and try again.';
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
