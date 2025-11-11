@@ -191,7 +191,7 @@ export default function Footer() {
                 <div className="flex flex-col items-center text-center">
                   <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-luxury-orange shadow-lg mb-4">
                     <img
-                      src="https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=300"
+                      src="/Prosenjit.jpg"
                       alt="Prosanjeet Roy"
                       className="w-full h-full object-cover"
                     />
@@ -201,7 +201,6 @@ export default function Footer() {
                   <div className="text-sm text-gray-600 leading-relaxed">
                     <p>Driving Process Excellence &</p>
                     <p>Digital Transformation</p>
-                    <p>within Air India</p>
                   </div>
                 </div>
               </div>
