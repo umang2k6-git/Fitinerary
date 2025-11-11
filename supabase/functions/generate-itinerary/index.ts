@@ -81,14 +81,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    let prompt = `You are an expert travel planner with deep knowledge of destinations worldwide. Analyze the destination and traveler profile, then create THREE meticulously crafted 2-day weekend itinerary tiers for ${destination}.
-
-Think through:
-1. What makes ${destination} unique and special?
-2. What are the must-see attractions vs hidden gems?
-3. How should activities be sequenced for optimal experience?
-4. What are realistic costs for each tier level?
-5. How can each tier offer distinct value propositions?`;
+    let prompt = `You are a luxury travel planner creating personalized weekend itineraries. Create THREE distinct 2-day weekend itinerary plans for ${destination}.`;
 
     if (userProfile) {
       const travelPurposeContext = {
@@ -117,68 +110,62 @@ Think through:
         'authentic': 'authentic local culinary experiences'
       };
 
-      prompt += `\n\nTRAVELER PROFILE:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Traveling as: ${travelPurposeContext[userProfile.travel_purpose as keyof typeof travelPurposeContext]}
-Budget range: ₹${userProfile.budget_min.toLocaleString()} - ₹${userProfile.budget_max.toLocaleString()}
-Accommodation style: ${accommodationContext[userProfile.accommodation_style as keyof typeof accommodationContext]}
-Dining preference: ${diningContext[userProfile.dining_preference as keyof typeof diningContext]}
-Travel pace: ${paceContext[userProfile.travel_pace as keyof typeof paceContext]}`;
+      prompt += `\n\nTraveler Profile:
+- Traveling as: ${travelPurposeContext[userProfile.travel_purpose as keyof typeof travelPurposeContext]}
+- Budget range: ₹${userProfile.budget_min.toLocaleString()} - ₹${userProfile.budget_max.toLocaleString()}
+- Preferred accommodation: ${accommodationContext[userProfile.accommodation_style as keyof typeof accommodationContext]}
+- Dining preference: ${diningContext[userProfile.dining_preference as keyof typeof diningContext]}
+- Travel pace: ${paceContext[userProfile.travel_pace as keyof typeof paceContext]}`;
 
       if (userProfile.special_interests && userProfile.special_interests.length > 0) {
-        prompt += `\nSpecial interests: ${userProfile.special_interests.join(', ')}`;
+        prompt += `\n- Special interests: ${userProfile.special_interests.join(', ')}`;
       }
 
       if (userProfile.preferred_activities && userProfile.preferred_activities.length > 0) {
-        prompt += `\nPreferred activities: ${userProfile.preferred_activities.join(', ')}`;
+        prompt += `\n- Preferred activities: ${userProfile.preferred_activities.join(', ')}`;
       }
 
       if (userProfile.dietary_restrictions) {
-        prompt += `\nDietary restrictions: ${userProfile.dietary_restrictions}`;
+        prompt += `\n- Dietary restrictions: ${userProfile.dietary_restrictions}`;
       }
 
       if (userProfile.accessibility_requirements) {
-        prompt += `\nAccessibility needs: ${userProfile.accessibility_requirements}`;
+        prompt += `\n- Accessibility requirements: ${userProfile.accessibility_requirements}`;
       }
 
-      prompt += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
-      prompt += `\n\nCREATE itineraries that PERFECTLY match this profile. Each tier should feel custom-designed for this traveler.`;
+      prompt += `\n\nTailor each tier to these specific preferences.`;
     } else {
       prompt += `\n\nTrip context: ${tripBrief}`;
     }
 
-    prompt += `\n\nITINERARY REQUIREMENTS:
+    prompt += `\n\nFor each tier (Budget, Balanced, Premium), provide:
+1. Comprehensive 2-day itinerary with Day 1 and Day 2 schedules
+2. Time-slot activities from morning to night
+3. Specific venue/attraction names and brief descriptions
+4. Estimated costs in INR
+5. Accommodation and dining details appropriate for the tier
 
-For EACH of the THREE tiers (Budget Explorer, Balanced, Luxe), provide:
-- Tier-appropriate accommodation and dining recommendations
-- Complete 2-day schedule with Day 1 and Day 2 activities
-- Time-slotted activities from morning to evening
-- SPECIFIC venue/attraction names (real places in ${destination})
-- Compelling descriptions that sell the experience
-- Realistic estimated costs in INR
-- Activities that showcase the destination's unique character
-
-OUTPUT FORMAT (valid JSON only, no markdown):
+Return ONLY a valid JSON object in this exact format:
 {
   "tiers": [
     {
       "id": "budget",
       "name": "Budget Explorer",
-      "description": "Smart spending without missing the magic",
-      "totalCost": <realistic total for 2 days>,
-      "accommodation": "Specific type/example for this tier",
-      "dining": "Dining style for this tier",
+      "description": "Affordable experiences without compromising on fun",
+      "totalCost": 8000,
+      "accommodation": "Comfortable hostel or budget hotel",
+      "dining": "Local eateries and street food",
       "days": [
         {
           "day": 1,
-          "title": "Day 1: Engaging Title",
+          "title": "Day 1: Arrival & Exploration",
           "activities": [
             {
               "time": "09:00 AM",
-              "title": "Activity Name",
-              "description": "Compelling description of the experience",
-              "cost": <cost in INR>,
-              "location": "Specific location in ${destination}"
+              "title": "Breakfast at Local Cafe",
+              "description": "Start with authentic local breakfast",
+              "cost": 200,
+              "location": "City Center"
             }
           ]
         }
@@ -187,12 +174,7 @@ OUTPUT FORMAT (valid JSON only, no markdown):
   ]
 }
 
-CRITICAL:
-- All costs must be realistic for ${destination}
-- All venues/attractions must be real and accessible
-- Activities must be properly sequenced (logical flow)
-- Each tier must offer distinctly different value and experiences
-- Total costs should clearly differentiate the tiers`;
+Ensure all costs are realistic for Indian destinations and activities are practical and achievable.`;
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -201,14 +183,19 @@ CRITICAL:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'o1-mini',
+        model: 'gpt-4o-mini',
         messages: [
+          {
+            role: 'system',
+            content: 'You are an expert travel planner. Always respond with valid JSON only, no markdown or explanations.'
+          },
           {
             role: 'user',
             content: prompt
           }
         ],
-        max_completion_tokens: 15000,
+        temperature: 0.7,
+        max_tokens: 3000,
       }),
     });
 
@@ -233,37 +220,6 @@ CRITICAL:
       throw new Error('Failed to parse itinerary data');
     }
 
-    let finalDestinationImageUrl = destinationImageUrl;
-
-    if (!finalDestinationImageUrl) {
-      try {
-        console.log(`Fetching hero image for ${destination}...`);
-        const supabaseUrl = Deno.env.get("SUPABASE_URL");
-
-        const imageResponse = await fetch(
-          `${supabaseUrl}/functions/v1/fetch-destination-image`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              destinationName: destination,
-              country: "India",
-            }),
-          }
-        );
-
-        if (imageResponse.ok) {
-          const imageData = await imageResponse.json();
-          finalDestinationImageUrl = imageData.imageUrl;
-          console.log(`Successfully fetched hero image for ${destination}`);
-        }
-      } catch (imageError) {
-        console.error(`Error fetching hero image for ${destination}:`, imageError);
-      }
-    }
-
     if (user && supabaseClient && !isGuest) {
       try {
         for (const tier of itineraryData.tiers) {
@@ -281,7 +237,7 @@ CRITICAL:
               .update({
                 days_json: tier.days,
                 total_cost: tier.totalCost,
-                destination_hero_image_url: finalDestinationImageUrl,
+                destination_hero_image_url: destinationImageUrl,
                 updated_at: new Date().toISOString(),
               })
               .eq('id', existingItinerary.id);
@@ -293,7 +249,7 @@ CRITICAL:
               .insert({
                 user_id: user.id,
                 destination,
-                destination_hero_image_url: finalDestinationImageUrl,
+                destination_hero_image_url: destinationImageUrl,
                 tier: tier.name,
                 days_json: tier.days,
                 total_cost: tier.totalCost,
