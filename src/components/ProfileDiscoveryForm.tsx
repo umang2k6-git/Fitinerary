@@ -1,26 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Search, Loader2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { X, Save, Loader2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import InterestTagSelector from './InterestTagSelector';
 import CityAutocomplete from './CityAutocomplete';
-import PackageCards from './PackageCards';
 
 interface ProfileDiscoveryFormProps {
   onClose: () => void;
-}
-
-interface Package {
-  packageName: string;
-  tagline: string;
-  tier: string;
-  totalCost: number;
-  costBreakdown: any;
-  highlights: string[];
-  accommodation: any;
-  transportation: any;
-  itinerary: any[];
 }
 
 export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormProps) {
@@ -28,8 +15,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [showPackages, setShowPackages] = useState(false);
-  const [packages, setPackages] = useState<Package[]>([]);
   const [formData, setFormData] = useState({
     start_city: '',
     destination_city: '',
@@ -119,27 +104,10 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
         if (error) throw error;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-package-variations`;
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate packages');
-      }
-
-      const data = await response.json();
-      setPackages(data.packages);
-      setShowPackages(true);
+      onClose();
     } catch (error) {
-      console.error('Error generating packages:', error);
-      alert('Failed to generate travel packages. Please try again.');
+      console.error('Error saving profile:', error);
+      alert('Failed to save profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -505,12 +473,12 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Generating...
+                    Saving...
                   </>
                 ) : (
                   <>
-                    <Search className="w-5 h-5" />
-                    Search and Plan
+                    <Save className="w-5 h-5" />
+                    Save Profile
                   </>
                 )}
               </button>
@@ -518,16 +486,6 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           </div>
         </form>
       </div>
-
-      {showPackages && packages.length > 0 && (
-        <PackageCards
-          packages={packages}
-          onClose={() => {
-            setShowPackages(false);
-            onClose();
-          }}
-        />
-      )}
     </div>
   );
 }
