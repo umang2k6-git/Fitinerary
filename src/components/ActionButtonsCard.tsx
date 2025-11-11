@@ -76,7 +76,7 @@ export default function ActionButtonsCard() {
       </div>
 
       <div className="mt-6 pt-6 border-t border-white/10">
-        <p className="text-white/60 text-xs text-center">
+        <p className="text-white/90 text-xs text-center font-medium">
           Both options are free. Create an account to save your itineraries.
         </p>
       </div>

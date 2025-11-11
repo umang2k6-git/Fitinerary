@@ -1,6 +1,7 @@
 import EnhancedHero from '../components/EnhancedHero';
 import ValueProposition from '../components/ValueProposition';
 import ActionButtonsCard from '../components/ActionButtonsCard';
+import TestimonialsMarquee from '../components/TestimonialsMarquee';
 
 export default function Landing() {
   return (
@@ -25,6 +26,8 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      <TestimonialsMarquee />
     </div>
   );
 }
