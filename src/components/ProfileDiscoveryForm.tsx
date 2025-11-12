@@ -141,20 +141,20 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
   const totalSteps = 2;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl my-8">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-3xl z-10">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl sm:rounded-3xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl my-2 sm:my-8">
+        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 rounded-t-2xl sm:rounded-t-3xl z-10">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900">Complete Your Travel Profile</h2>
-              <p className="text-gray-600 mt-1">Step {currentStep} of {totalSteps}</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Complete Your Travel Profile</h2>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">Step {currentStep} of {totalSteps}</p>
             </div>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               aria-label="Close"
             >
-              <X className="w-6 h-6 text-gray-500" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
             </button>
           </div>
 
@@ -170,10 +170,10 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6">
           {currentStep === 1 && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Basic Information</h3>
+            <div className="space-y-4 sm:space-y-6">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Basic Information</h3>
 
               <CityAutocomplete
                 id="start_city"
@@ -185,7 +185,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                 required
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label htmlFor="trip_start_date" className="block text-sm font-semibold text-gray-700 mb-2">
                     Trip Start Date *
@@ -197,7 +197,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                     value={formData.trip_start_date}
                     onChange={handleChange}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all text-sm sm:text-base"
                     required
                   />
                 </div>
@@ -213,7 +213,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                     value={formData.trip_end_date}
                     onChange={handleChange}
                     min={formData.trip_start_date || new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all text-sm sm:text-base"
                     required
                   />
                 </div>
@@ -228,7 +228,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   name="travel_purpose"
                   value={formData.travel_purpose}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white text-sm sm:text-base"
                   required
                 >
                   <option value="Solo">Solo</option>
@@ -241,12 +241,12 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                 <label htmlFor="budget_max" className="block text-sm font-semibold text-gray-700 mb-2">
                   Maximum Budget *
                 </label>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-3xl font-bold text-luxury-teal">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+                    <span className="text-2xl sm:text-3xl font-bold text-luxury-teal">
                       ₹{formData.budget_max.toLocaleString('en-IN')}
                     </span>
-                    <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                    <span className="text-xs sm:text-sm font-medium text-gray-600 bg-gray-100 px-2 sm:px-3 py-1 rounded-full w-fit">
                       {formData.budget_max === 0 ? 'No budget set' : formData.budget_max >= 1000000 ? '10 Lakhs' : `${(formData.budget_max / 100000).toFixed(1)} Lakhs`}
                     </span>
                   </div>
@@ -267,11 +267,11 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                       required
                     />
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500 font-medium">
+                  <div className="flex justify-between text-[10px] sm:text-xs text-gray-500 font-medium">
                     <span>₹0</span>
-                    <span>₹2.5L</span>
+                    <span className="hidden sm:inline">₹2.5L</span>
                     <span>₹5L</span>
-                    <span>₹7.5L</span>
+                    <span className="hidden sm:inline">₹7.5L</span>
                     <span>₹10L</span>
                   </div>
                 </div>
@@ -283,8 +283,8 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
           )}
 
           {currentStep === 2 && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Travel Preferences</h3>
+            <div className="space-y-4 sm:space-y-6">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Travel Preferences</h3>
 
               <div>
                 <label htmlFor="accommodation_style" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -295,7 +295,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   name="accommodation_style"
                   value={formData.accommodation_style}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white text-sm sm:text-base"
                   required
                 >
                   <option value="budget">Budget</option>
@@ -313,7 +313,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   name="dining_preference"
                   value={formData.dining_preference}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white text-sm sm:text-base"
                   required
                 >
                   <option value="street-food">Street Food & Local Eateries</option>
@@ -332,7 +332,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   name="travel_pace"
                   value={formData.travel_pace}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all bg-white text-sm sm:text-base"
                   required
                 >
                   <option value="relaxed">Relaxed (1-2 activities per day)</option>
@@ -345,13 +345,13 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Preferred Activities
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {activityOptions.map(activity => (
                     <button
                       key={activity}
                       type="button"
                       onClick={() => handleActivityToggle(activity)}
-                      className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${
                         formData.preferred_activities.includes(activity)
                           ? 'bg-luxury-teal text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -374,7 +374,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   value={formData.dietary_restrictions}
                   onChange={handleChange}
                   placeholder="e.g., Vegetarian, Vegan, Gluten-free, No allergies"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all text-sm sm:text-base"
                 />
               </div>
 
@@ -389,13 +389,13 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   onChange={handleChange}
                   placeholder="Any special needs or accessibility requirements"
                   rows={2}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all resize-none"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-gray-300 focus:border-luxury-teal focus:ring-2 focus:ring-luxury-teal/20 outline-none transition-all resize-none text-sm sm:text-base"
                 />
               </div>
             </div>
           )}
 
-          <div className="flex gap-3 pt-6 mt-6 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 sm:pt-6 mt-4 sm:mt-6 border-t border-gray-200">
             {currentStep > 1 && (
               <button
                 type="button"
@@ -404,9 +404,9 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   e.stopPropagation();
                   setCurrentStep(prev => prev - 1);
                 }}
-                className="px-6 py-3 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-gray-300 text-gray-700 text-sm sm:text-base font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                 Previous
               </button>
             )}
@@ -414,7 +414,7 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+              className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-gray-300 text-gray-700 text-sm sm:text-base font-semibold hover:bg-gray-50 transition-colors"
               disabled={loading}
             >
               Cancel
@@ -428,24 +428,28 @@ export default function ProfileDiscoveryForm({ onClose }: ProfileDiscoveryFormPr
                   e.stopPropagation();
                   setCurrentStep(prev => prev + 1);
                 }}
-                className="flex-1 btn-primary flex items-center justify-center gap-2"
+                className="flex-1 btn-primary flex items-center justify-center gap-2 py-2.5 sm:py-3 text-sm sm:text-base"
               >
                 Next
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             ) : (
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 btn-primary flex items-center justify-center gap-2"
+                className="flex-1 btn-primary flex items-center justify-center gap-2 py-2.5 sm:py-3 text-sm sm:text-base"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Generating your Fitinerary...
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                    <span className="hidden sm:inline">Generating your Fitinerary...</span>
+                    <span className="sm:hidden">Generating...</span>
                   </>
                 ) : (
-                  'Generate my Fitinerary'
+                  <>
+                    <span className="hidden sm:inline">Generate my Fitinerary</span>
+                    <span className="sm:hidden">Generate</span>
+                  </>
                 )}
               </button>
             )}
