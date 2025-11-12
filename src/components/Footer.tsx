@@ -55,17 +55,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <a href="#" className="text-gray-400 hover:text-luxury-teal transition-colors duration-300">
-                    Careers
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-400 hover:text-luxury-teal transition-colors duration-300">
                     Press & Media
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-400 hover:text-luxury-teal transition-colors duration-300">
-                    Contact Us
                   </a>
                 </li>
               </ul>
