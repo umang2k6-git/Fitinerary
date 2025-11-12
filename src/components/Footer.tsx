@@ -73,7 +73,7 @@ export default function Footer() {
                   </button>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-400 hover:text-luxury-teal transition-colors duration-300">
+                  <a href="/destination-guides" className="text-gray-400 hover:text-luxury-teal transition-colors duration-300">
                     Destination Guides
                   </a>
                 </li>

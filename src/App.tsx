@@ -18,6 +18,7 @@ import Discovery from './pages/Discovery';
 import PersonalizedDestinations from './pages/PersonalizedDestinations';
 import Blog from './pages/Blog';
 import PressMedia from './pages/PressMedia';
+import DestinationGuides from './pages/DestinationGuides';
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
               <Route path="/generate" element={<Generate />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/press-media" element={<PressMedia />} />
+              <Route path="/destination-guides" element={<DestinationGuides />} />
               <Route path="/guest-itinerary/:id" element={<GuestItineraryDetail />} />
               <Route
                 path="/discovery"
