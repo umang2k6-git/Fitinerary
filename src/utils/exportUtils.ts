@@ -39,8 +39,16 @@ const parseDurationToMinutes = (duration: string): number => {
   return minutes || 60;
 };
 
-const parseTimeToDate = (dayDate: string, timeString: string): Date => {
-  const currentYear = new Date().getFullYear();
+const parseTimeToDate = (dayDate: string, dayNumber: number, timeString: string): Date => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const currentDay = now.getDate();
+
+  // Calculate the date based on day number (1 = today, 2 = tomorrow, etc.)
+  const targetDate = new Date(currentYear, currentMonth, currentDay + (dayNumber - 1));
+
+  // If dayDate contains a month and day (e.g., "January 15"), use that instead
   const monthMap: Record<string, number> = {
     'january': 0, 'jan': 0, 'february': 1, 'feb': 1, 'march': 2, 'mar': 2,
     'april': 3, 'apr': 3, 'may': 4, 'june': 5, 'jun': 5,
@@ -51,15 +59,15 @@ const parseTimeToDate = (dayDate: string, timeString: string): Date => {
   const dateRegex = /(\w+)\s+(\d+)/i;
   const match = dayDate.match(dateRegex);
 
-  let month = new Date().getMonth();
-  let day = new Date().getDate();
+  let month = targetDate.getMonth();
+  let day = targetDate.getDate();
 
   if (match) {
     const monthName = match[1].toLowerCase();
     if (monthMap[monthName] !== undefined) {
       month = monthMap[monthName];
+      day = parseInt(match[2]);
     }
-    day = parseInt(match[2]);
   }
 
   if (!timeString) {
@@ -148,12 +156,12 @@ export const exportToICS = async (itinerary: Itinerary): Promise<void> => {
 
       for (const activity of day.activities) {
         try {
-          if (!activity.name || !activity.time || !day.date) {
+          if (!activity.name || !activity.time) {
             console.warn('Skipping activity with missing required fields:', activity);
             continue;
           }
 
-          const startDate = parseTimeToDate(day.date, activity.time);
+          const startDate = parseTimeToDate(day.date || 'Day ' + day.day, day.day, activity.time);
           const durationMinutes = parseDurationToMinutes(activity.duration || '1 hour');
           const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
 
