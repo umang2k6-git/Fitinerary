@@ -121,11 +121,6 @@ export default function Footer() {
                     Cookie Policy
                   </button>
                 </li>
-                <li>
-                  <a href="#" className="text-gray-400 hover:text-luxury-teal transition-colors duration-300">
-                    Refund Policy
-                  </a>
-                </li>
               </ul>
             </div>
           </div>
