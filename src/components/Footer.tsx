@@ -104,16 +104,6 @@ export default function Footer() {
               <h4 className="text-lg font-medium mb-4 text-luxury-orange">Legal</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="#" className="text-gray-400 hover:text-luxury-teal transition-colors duration-300">
-                    Terms of Service
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-400 hover:text-luxury-teal transition-colors duration-300">
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
                   <button
                     onClick={() => openModal('cookies')}
                     className="text-gray-400 hover:text-luxury-teal transition-colors duration-300 text-left"
