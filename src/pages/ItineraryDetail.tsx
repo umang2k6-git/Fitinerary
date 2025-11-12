@@ -342,6 +342,14 @@ export default function ItineraryDetail() {
             <ChevronLeft className="w-6 h-6" />
           </button>
 
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute top-6 right-6 px-6 py-3 rounded-full glass text-white hover:scale-105 transition-all duration-300 font-medium flex items-center gap-2"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            Back to Plans
+          </button>
+
           <div className="absolute bottom-0 left-0 right-0 p-8">
             <div className="max-w-6xl mx-auto">
               <div className="inline-block px-4 py-2 rounded-full bg-luxury-teal text-white text-sm font-medium mb-4">
