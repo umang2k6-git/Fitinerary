@@ -226,6 +226,8 @@ const loadImageAsBase64 = async (url: string): Promise<string | null> => {
 };
 
 export const exportToPDF = async (itinerary: Itinerary): Promise<void> => {
+  console.log('Starting PDF export for:', itinerary.destination);
+
   try {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -246,7 +248,9 @@ export const exportToPDF = async (itinerary: Itinerary): Promise<void> => {
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
-    doc.text(itinerary.destination, pageWidth / 2, 20, { align: 'center' });
+
+    const destinationText = doc.splitTextToSize(itinerary.destination, pageWidth - 40);
+    doc.text(destinationText, pageWidth / 2, 20, { align: 'center' });
 
     doc.setFontSize(12);
     doc.text(`${itinerary.tier} Tier • ${itinerary.duration_days} Day Itinerary`, pageWidth / 2, 30, { align: 'center' });
@@ -261,10 +265,13 @@ export const exportToPDF = async (itinerary: Itinerary): Promise<void> => {
 
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Total Cost: ₹${itinerary.total_cost.toLocaleString()}`, 20, yPosition);
+    const totalCost = itinerary.total_cost ? itinerary.total_cost.toLocaleString() : '0';
+    doc.text(`Total Cost: ₹${totalCost}`, 20, yPosition);
     yPosition += 7;
     doc.text(`Duration: ${itinerary.duration_days} days`, 20, yPosition);
     yPosition += 15;
+
+    console.log(`Processing ${itinerary.days_json.length} days`);
 
     for (const day of itinerary.days_json) {
       addPageIfNeeded(30);
@@ -278,53 +285,50 @@ export const exportToPDF = async (itinerary: Itinerary): Promise<void> => {
       doc.text(`Day ${day.day}`, 45, yPosition + 2, { align: 'center' });
 
       doc.setTextColor(0, 0, 0);
-      doc.text(day.date, 80, yPosition + 2);
+      doc.text(day.date || '', 80, yPosition + 2);
       yPosition += 15;
 
       for (const activity of day.activities) {
-        addPageIfNeeded(60);
+        try {
+          addPageIfNeeded(60);
 
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.5);
-        doc.roundedRect(20, yPosition, pageWidth - 40, 50, 3, 3, 'S');
+          doc.setDrawColor(200, 200, 200);
+          doc.setLineWidth(0.5);
+          doc.roundedRect(20, yPosition, pageWidth - 40, 50, 3, 3, 'S');
 
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        const activityTitle = doc.splitTextToSize(activity.name, pageWidth - 85);
-        doc.text(activityTitle, 25, yPosition + 8);
+          doc.setFontSize(11);
+          doc.setFont('helvetica', 'bold');
+          const activityTitle = doc.splitTextToSize(activity.name || 'Activity', pageWidth - 85);
+          doc.text(activityTitle, 25, yPosition + 8);
 
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`${activity.timeOfDay} • ${activity.time}`, 25, yPosition + 14);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          doc.setTextColor(100, 100, 100);
+          doc.text(`${activity.timeOfDay || ''} • ${activity.time || ''}`, 25, yPosition + 14);
 
-        doc.setTextColor(0, 0, 0);
-        const venueText = doc.splitTextToSize(`${activity.venue}, ${activity.location}`, pageWidth - 85);
-        doc.text(venueText, 25, yPosition + 20);
+          doc.setTextColor(0, 0, 0);
+          const venue = activity.venue || 'Venue TBD';
+          const location = activity.location || '';
+          const venueText = doc.splitTextToSize(`${venue}, ${location}`, pageWidth - 85);
+          doc.text(venueText, 25, yPosition + 20);
 
-        const descLines = doc.splitTextToSize(activity.description, pageWidth - 85);
-        doc.text(descLines, 25, yPosition + 26);
+          const description = activity.description || 'No description available';
+          const descLines = doc.splitTextToSize(description, pageWidth - 85);
+          doc.text(descLines, 25, yPosition + 26);
 
-        doc.setTextColor(20, 184, 166);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`₹${activity.cost}`, pageWidth - 35, yPosition + 8, { align: 'right' });
+          doc.setTextColor(20, 184, 166);
+          doc.setFont('helvetica', 'bold');
+          const cost = activity.cost || 0;
+          doc.text(`₹${cost}`, pageWidth - 35, yPosition + 8, { align: 'right' });
 
-        doc.setTextColor(100, 100, 100);
-        doc.setFont('helvetica', 'normal');
-        doc.text(activity.duration, pageWidth - 35, yPosition + 14, { align: 'right' });
+          doc.setTextColor(100, 100, 100);
+          doc.setFont('helvetica', 'normal');
+          doc.text(activity.duration || '', pageWidth - 35, yPosition + 14, { align: 'right' });
 
-        if (activity.images && activity.images.length > 0) {
-          try {
-            const imageData = await loadImageAsBase64(activity.images[0]);
-            if (imageData) {
-              doc.addImage(imageData, 'JPEG', pageWidth - 55, yPosition + 5, 20, 20);
-            }
-          } catch (error) {
-            console.warn('Skipping image due to error:', error);
-          }
+          yPosition += 55;
+        } catch (activityError) {
+          console.warn('Error processing activity:', activityError);
         }
-
-        yPosition += 55;
       }
 
       yPosition += 5;
@@ -335,12 +339,16 @@ export const exportToPDF = async (itinerary: Itinerary): Promise<void> => {
     const footerText = 'Created with Fitinerary';
     doc.text(footerText, pageWidth / 2, pageHeight - 10, { align: 'center' });
 
-    const fileName = `${itinerary.destination.replace(/\s+/g, '-')}-${itinerary.tier}-itinerary.pdf`;
+    const sanitizedDestination = itinerary.destination.replace(/[^a-zA-Z0-9-_]/g, '-');
+    const fileName = `${sanitizedDestination}-${itinerary.tier}-itinerary.pdf`;
+
+    console.log('Saving PDF as:', fileName);
     doc.save(fileName);
 
     console.log('PDF exported successfully');
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in exportToPDF:', error);
-    throw new Error('Failed to export PDF. Please try again.');
+    console.error('Error stack:', error.stack);
+    throw new Error(`Failed to export PDF: ${error.message || 'Unknown error'}`);
   }
 };
