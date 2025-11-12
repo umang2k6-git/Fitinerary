@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Calendar, FileText, X, Download } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Calendar, FileText, X, Download, Loader2 } from 'lucide-react';
 import { exportToICS, exportToPDF } from '../utils/exportUtils';
 
 interface Activity {
@@ -36,6 +36,10 @@ interface ExportShareModalProps {
 }
 
 export default function ExportShareModal({ itinerary, onClose }: ExportShareModalProps) {
+  const [loadingICS, setLoadingICS] = useState(false);
+  const [loadingPDF, setLoadingPDF] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -47,12 +51,30 @@ export default function ExportShareModal({ itinerary, onClose }: ExportShareModa
     return () => document.removeEventListener('keydown', handleEscape);
   }, [onClose]);
 
-  const handleICSExport = () => {
-    exportToICS(itinerary);
+  const handleICSExport = async () => {
+    setLoadingICS(true);
+    setError(null);
+    try {
+      await exportToICS(itinerary);
+    } catch (err: any) {
+      setError(err.message || 'Failed to export calendar file');
+      console.error('ICS export error:', err);
+    } finally {
+      setLoadingICS(false);
+    }
   };
 
   const handlePDFExport = async () => {
-    await exportToPDF(itinerary);
+    setLoadingPDF(true);
+    setError(null);
+    try {
+      await exportToPDF(itinerary);
+    } catch (err: any) {
+      setError(err.message || 'Failed to export PDF');
+      console.error('PDF export error:', err);
+    } finally {
+      setLoadingPDF(false);
+    }
   };
 
   return (
@@ -82,16 +104,27 @@ export default function ExportShareModal({ itinerary, onClose }: ExportShareModa
           </p>
         </div>
 
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <p className="text-red-700 text-sm text-center">{error}</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <button
             onClick={handleICSExport}
-            className="group relative overflow-hidden rounded-2xl border-2 border-gray-200 p-8 text-left transition-all duration-300 hover:border-luxury-teal hover:shadow-lg hover:scale-105"
+            disabled={loadingICS || loadingPDF}
+            className="group relative overflow-hidden rounded-2xl border-2 border-gray-200 p-8 text-left transition-all duration-300 hover:border-luxury-teal hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-luxury-teal/10 to-transparent rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-300" />
 
             <div className="relative">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 mb-4">
-                <Calendar className="w-7 h-7 text-white" />
+                {loadingICS ? (
+                  <Loader2 className="w-7 h-7 text-white animate-spin" />
+                ) : (
+                  <Calendar className="w-7 h-7 text-white" />
+                )}
               </div>
 
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -103,21 +136,28 @@ export default function ExportShareModal({ itinerary, onClose }: ExportShareModa
               </p>
 
               <div className="flex items-center text-luxury-teal font-medium text-sm">
-                <span>Download ICS</span>
-                <Download className="w-4 h-4 ml-2 group-hover:translate-y-1 transition-transform" />
+                <span>{loadingICS ? 'Preparing...' : 'Download ICS'}</span>
+                {!loadingICS && (
+                  <Download className="w-4 h-4 ml-2 group-hover:translate-y-1 transition-transform" />
+                )}
               </div>
             </div>
           </button>
 
           <button
             onClick={handlePDFExport}
-            className="group relative overflow-hidden rounded-2xl border-2 border-gray-200 p-8 text-left transition-all duration-300 hover:border-luxury-orange hover:shadow-lg hover:scale-105"
+            disabled={loadingICS || loadingPDF}
+            className="group relative overflow-hidden rounded-2xl border-2 border-gray-200 p-8 text-left transition-all duration-300 hover:border-luxury-orange hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-luxury-orange/10 to-transparent rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-300" />
 
             <div className="relative">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 mb-4">
-                <FileText className="w-7 h-7 text-white" />
+                {loadingPDF ? (
+                  <Loader2 className="w-7 h-7 text-white animate-spin" />
+                ) : (
+                  <FileText className="w-7 h-7 text-white" />
+                )}
               </div>
 
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -129,8 +169,10 @@ export default function ExportShareModal({ itinerary, onClose }: ExportShareModa
               </p>
 
               <div className="flex items-center text-luxury-orange font-medium text-sm">
-                <span>Download PDF</span>
-                <Download className="w-4 h-4 ml-2 group-hover:translate-y-1 transition-transform" />
+                <span>{loadingPDF ? 'Generating...' : 'Download PDF'}</span>
+                {!loadingPDF && (
+                  <Download className="w-4 h-4 ml-2 group-hover:translate-y-1 transition-transform" />
+                )}
               </div>
             </div>
           </button>
