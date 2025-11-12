@@ -50,7 +50,8 @@ export default function PersonalizedDestinations() {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
-        throw new Error('Not authenticated');
+        navigate('/login');
+        return;
       }
 
       const { data, error } = await supabase.functions.invoke('get-personalized-destinations', {
@@ -58,18 +59,27 @@ export default function PersonalizedDestinations() {
       });
 
       if (error) {
-        throw new Error(error.message || 'Failed to fetch destinations');
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to connect to personalized destinations service');
       }
 
       if (!data) {
-        throw new Error('No data returned from function');
+        throw new Error('No destinations found. Please complete your profile first.');
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (!data.destinations || data.destinations.length === 0) {
+        throw new Error('No destinations found matching your preferences. Please try updating your profile.');
       }
 
       setDestinations(data.destinations);
       setProfile(data.profile);
     } catch (err: any) {
       console.error('Error fetching destinations:', err);
-      setError(err.message || 'Failed to load personalized destinations');
+      setError(err.message || 'Failed to load personalized destinations. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -115,12 +125,26 @@ export default function PersonalizedDestinations() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Oops!</h2>
           <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/')}
-            className="btn-primary w-full"
-          >
-            Go Home
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={() => fetchPersonalizedDestinations()}
+              className="btn-primary w-full"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => navigate('/discovery')}
+              className="btn-secondary w-full"
+            >
+              Update Profile
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="text-gray-500 hover:text-gray-700 text-sm"
+            >
+              Go Home
+            </button>
+          </div>
         </div>
       </div>
     );

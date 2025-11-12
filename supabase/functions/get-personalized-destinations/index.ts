@@ -10,14 +10,14 @@ const corsHeaders = {
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders,
-    });
-  }
-
   try {
+    if (req.method === "OPTIONS") {
+      return new Response(null, {
+        status: 200,
+        headers: corsHeaders,
+      });
+    }
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -210,12 +210,15 @@ Ensure all 6 destinations are DIFFERENT from each other, realistic, and genuinel
         },
       }
     );
-  } catch (error) {
-    console.error("Error:", error);
+  } catch (error: any) {
+    console.error("Error in get-personalized-destinations:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({
+        error: error.message || "An unexpected error occurred",
+        details: error.toString()
+      }),
       {
-        status: 500,
+        status: error.message?.includes("Unauthorized") ? 401 : 500,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
