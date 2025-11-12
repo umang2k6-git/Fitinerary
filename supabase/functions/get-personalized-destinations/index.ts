@@ -76,8 +76,8 @@ TRAVELER PROFILE:
 │ Accommodation: ${profile.accommodation_style}
 │ Dining Style: ${profile.dining_preference}
 │ Travel Pace: ${profile.travel_pace}
-│ Preferred Activities: ${profile.preferred_activities.join(', ')}
-│ Special Interests: ${profile.special_interests.join(', ')}
+│ Preferred Activities: ${(profile.preferred_activities || []).join(', ') || 'Not specified'}
+${profile.special_interests && profile.special_interests.length > 0 ? `│ Special Interests: ${profile.special_interests.join(', ')}` : ''}
 ${profile.dietary_restrictions ? `│ Dietary Restrictions: ${profile.dietary_restrictions}` : ''}
 ${profile.accessibility_requirements ? `│ Accessibility Needs: ${profile.accessibility_requirements}` : ''}
 └─────────────────────────────────────────────────────────┘
