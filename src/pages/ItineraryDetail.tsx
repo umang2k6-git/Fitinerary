@@ -387,14 +387,6 @@ export default function ItineraryDetail() {
           </button>
 
           <button
-            onClick={() => setShowConversation(!showConversation)}
-            className="px-6 py-3 rounded-full bg-gradient-to-r from-luxury-teal to-luxury-orange text-white font-medium flex items-center gap-2 hover:shadow-glow-teal transition-all duration-300 hover:scale-105"
-          >
-            <Sparkles className="w-5 h-5" />
-            Refine It
-          </button>
-
-          <button
             onClick={() => setShowExportModal(true)}
             className="px-6 py-3 rounded-full border-2 border-luxury-orange text-luxury-orange font-medium flex items-center gap-2 hover:bg-luxury-orange hover:text-white transition-all duration-300"
           >
