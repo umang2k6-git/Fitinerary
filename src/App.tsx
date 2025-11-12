@@ -17,6 +17,7 @@ import QuickItinerary from './pages/QuickItinerary';
 import Discovery from './pages/Discovery';
 import PersonalizedDestinations from './pages/PersonalizedDestinations';
 import Blog from './pages/Blog';
+import PressMedia from './pages/PressMedia';
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
               <Route path="/inspire-me" element={<InspireMe />} />
               <Route path="/generate" element={<Generate />} />
               <Route path="/blog" element={<Blog />} />
+              <Route path="/press-media" element={<PressMedia />} />
               <Route path="/guest-itinerary/:id" element={<GuestItineraryDetail />} />
               <Route
                 path="/discovery"

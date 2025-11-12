@@ -54,7 +54,7 @@ export default function Footer() {
                   </button>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-400 hover:text-luxury-teal transition-colors duration-300">
+                  <a href="/press-media" className="text-gray-400 hover:text-luxury-teal transition-colors duration-300">
                     Press & Media
                   </a>
                 </li>
