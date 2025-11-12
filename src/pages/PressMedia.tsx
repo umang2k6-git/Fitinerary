@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
-import { Newspaper, Calendar, Award, TrendingUp, Users, Globe, ExternalLink } from 'lucide-react';
+import { Newspaper, Calendar, Award, TrendingUp, Users, Globe, ExternalLink, ArrowLeft } from 'lucide-react';
 
 interface MediaContent {
   id: string;
@@ -120,14 +120,23 @@ export default function PressMedia() {
       <Navigation />
 
       <div className="max-w-7xl mx-auto px-6 py-12 mt-16">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-light text-luxury-charcoal mb-4" style={{ letterSpacing: '-0.02em' }}>
-            Press & Media
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Latest news, awards, and features about Fitinerary's journey to revolutionize travel planning
-          </p>
+        {/* Header with Back Button */}
+        <div className="flex justify-between items-start mb-12">
+          <div>
+            <h1 className="text-5xl font-light text-luxury-charcoal mb-4" style={{ letterSpacing: '-0.02em' }}>
+              Press & Media
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl">
+              Latest news, awards, and features about Fitinerary's journey to revolutionize travel planning
+            </p>
+          </div>
+          <Link
+            to="/"
+            className="flex items-center gap-2 px-6 py-3 bg-luxury-teal text-white rounded-full hover:bg-luxury-teal/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back
+          </Link>
         </div>
 
         {/* Stats Section */}
