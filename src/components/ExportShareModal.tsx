@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Calendar, FileText, X, Download } from 'lucide-react';
 import { exportToICS, exportToPDF } from '../utils/exportUtils';
 
@@ -35,6 +36,17 @@ interface ExportShareModalProps {
 }
 
 export default function ExportShareModal({ itinerary, onClose }: ExportShareModalProps) {
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   const handleICSExport = () => {
     exportToICS(itinerary);
   };
