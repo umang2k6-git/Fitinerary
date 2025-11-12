@@ -16,6 +16,7 @@ import MyItineraries from './pages/MyItineraries';
 import QuickItinerary from './pages/QuickItinerary';
 import Discovery from './pages/Discovery';
 import PersonalizedDestinations from './pages/PersonalizedDestinations';
+import Blog from './pages/Blog';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
               <Route path="/quick-itinerary" element={<QuickItinerary />} />
               <Route path="/inspire-me" element={<InspireMe />} />
               <Route path="/generate" element={<Generate />} />
+              <Route path="/blog" element={<Blog />} />
               <Route path="/guest-itinerary/:id" element={<GuestItineraryDetail />} />
               <Route
                 path="/discovery"
