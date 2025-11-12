@@ -127,12 +127,14 @@ const generateUID = (): string => {
 };
 
 export const exportToICS = async (itinerary: Itinerary): Promise<void> => {
-  console.log('=== Starting Manual ICS Export ===');
+  console.log('=== Starting ICS Export ===');
   console.log('Destination:', itinerary.destination);
+  console.log('Tier:', itinerary.tier);
   console.log('Days:', itinerary.days_json?.length);
 
   try {
-    if (!itinerary.days_json || itinerary.days_json.length === 0) {
+    if (!itinerary || !itinerary.days_json || itinerary.days_json.length === 0) {
+      console.error('ERROR: Missing itinerary data');
       throw new Error('No itinerary data available to export');
     }
 
@@ -154,10 +156,12 @@ export const exportToICS = async (itinerary: Itinerary): Promise<void> => {
         continue;
       }
 
+      console.log(`Processing day ${day.day} with ${day.activities.length} activities`);
+
       for (const activity of day.activities) {
         try {
           if (!activity.name || !activity.time) {
-            console.warn('Skipping activity with missing required fields:', activity);
+            console.warn(`Skipping activity - name: ${activity.name}, time: ${activity.time}`);
             continue;
           }
 
@@ -196,12 +200,13 @@ export const exportToICS = async (itinerary: Itinerary): Promise<void> => {
           icsLines.push('END:VEVENT');
 
           eventCount++;
-          console.log(`Added event ${eventCount}: ${activity.name} on ${day.date} at ${activity.time}`);
         } catch (activityError: any) {
-          console.error(`Error processing activity "${activity.name}":`, activityError);
+          console.error(`Error processing activity:`, activityError);
         }
       }
     }
+
+    console.log(`Total events created: ${eventCount}`);
 
     icsLines.push('END:VCALENDAR');
 
@@ -210,7 +215,6 @@ export const exportToICS = async (itinerary: Itinerary): Promise<void> => {
     }
 
     const icsContent = icsLines.join('\r\n');
-    console.log(`Total events created: ${eventCount}`);
     console.log('ICS content length:', icsContent.length);
 
     const blob = new Blob([icsContent], {

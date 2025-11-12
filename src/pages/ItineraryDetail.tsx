@@ -495,7 +495,7 @@ export default function ItineraryDetail() {
         </div>
       </div>
 
-      {showExportModal && (
+      {showExportModal && itinerary && (
         <ExportShareModal
           itinerary={itinerary}
           onClose={() => setShowExportModal(false)}
