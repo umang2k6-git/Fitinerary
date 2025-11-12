@@ -43,8 +43,10 @@ const parseDurationToMinutes = (duration: string): number => {
 const parseTimeToDate = (dayDate: string, timeString: string): Date => {
   const currentYear = new Date().getFullYear();
   const monthMap: Record<string, number> = {
-    'january': 0, 'february': 1, 'march': 2, 'april': 3, 'may': 4, 'june': 5,
-    'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11
+    'january': 0, 'jan': 0, 'february': 1, 'feb': 1, 'march': 2, 'mar': 2,
+    'april': 3, 'apr': 3, 'may': 4, 'june': 5, 'jun': 5,
+    'july': 6, 'jul': 6, 'august': 7, 'aug': 7, 'september': 8, 'sep': 8, 'sept': 8,
+    'october': 9, 'oct': 9, 'november': 10, 'nov': 10, 'december': 11, 'dec': 11
   };
 
   const dateRegex = /(\w+)\s+(\d+)/i;
@@ -61,19 +63,37 @@ const parseTimeToDate = (dayDate: string, timeString: string): Date => {
     day = parseInt(match[2]);
   }
 
-  const [timeStr, period] = timeString.split(' ');
-  const [hours, minutes] = timeStr.split(':').map(Number);
+  if (!timeString) {
+    return new Date(currentYear, month, day, 9, 0);
+  }
+
+  const timeStringClean = timeString.trim();
+  const parts = timeStringClean.split(' ');
+  const timePart = parts[0];
+  const period = parts[1] || '';
+
+  const timeParts = timePart.split(':');
+  const hours = parseInt(timeParts[0]) || 0;
+  const minutes = parseInt(timeParts[1]) || 0;
 
   let hour24 = hours;
   if (period) {
-    if (period.toUpperCase() === 'PM' && hours !== 12) {
+    const periodUpper = period.toUpperCase();
+    if (periodUpper === 'PM' && hours !== 12) {
       hour24 = hours + 12;
-    } else if (period.toUpperCase() === 'AM' && hours === 12) {
+    } else if (periodUpper === 'AM' && hours === 12) {
       hour24 = 0;
     }
   }
 
-  return new Date(currentYear, month, day, hour24, minutes || 0);
+  const date = new Date(currentYear, month, day, hour24, minutes);
+
+  if (isNaN(date.getTime())) {
+    console.warn(`Invalid date parsed: ${dayDate} ${timeString}`);
+    return new Date(currentYear, month, day, 9, 0);
+  }
+
+  return date;
 };
 
 export const exportToICS = (itinerary: Itinerary): Promise<void> => {
@@ -81,45 +101,68 @@ export const exportToICS = (itinerary: Itinerary): Promise<void> => {
     try {
       const events: EventAttributes[] = [];
 
+      console.log('Starting ICS export with', itinerary.days_json.length, 'days');
+
       itinerary.days_json.forEach((day: Day) => {
         day.activities.forEach((activity: Activity) => {
-          const startDate = parseTimeToDate(day.date, activity.time);
-          const durationMinutes = parseDurationToMinutes(activity.duration);
-          const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+          try {
+            const startDate = parseTimeToDate(day.date, activity.time);
+            const durationMinutes = parseDurationToMinutes(activity.duration);
+            const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
 
-          const start: DateArray = [
-            startDate.getFullYear(),
-            startDate.getMonth() + 1,
-            startDate.getDate(),
-            startDate.getHours(),
-            startDate.getMinutes()
-          ];
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+              console.warn(`Invalid date for activity: ${activity.name}`);
+              return;
+            }
 
-          const end: DateArray = [
-            endDate.getFullYear(),
-            endDate.getMonth() + 1,
-            endDate.getDate(),
-            endDate.getHours(),
-            endDate.getMinutes()
-          ];
+            const start: DateArray = [
+              startDate.getFullYear(),
+              startDate.getMonth() + 1,
+              startDate.getDate(),
+              startDate.getHours(),
+              startDate.getMinutes()
+            ];
 
-          events.push({
-            start,
-            end,
-            title: activity.name,
-            description: `${activity.description}\n\nCost: ₹${activity.cost}\nDuration: ${activity.duration}`,
-            location: `${activity.venue}, ${activity.location}`,
-            status: 'CONFIRMED',
-            busyStatus: 'BUSY',
-            organizer: { name: 'Fitinerary', email: 'noreply@fitinerary.com' }
-          });
+            const end: DateArray = [
+              endDate.getFullYear(),
+              endDate.getMonth() + 1,
+              endDate.getDate(),
+              endDate.getHours(),
+              endDate.getMinutes()
+            ];
+
+            events.push({
+              start,
+              end,
+              title: activity.name,
+              description: `${activity.description}\n\nCost: ₹${activity.cost}\nDuration: ${activity.duration}`,
+              location: `${activity.venue}, ${activity.location}`,
+              status: 'CONFIRMED',
+              busyStatus: 'BUSY',
+              organizer: { name: 'Fitinerary', email: 'noreply@fitinerary.com' }
+            });
+          } catch (activityError) {
+            console.warn(`Error processing activity ${activity.name}:`, activityError);
+          }
         });
       });
+
+      if (events.length === 0) {
+        reject(new Error('No valid events to export'));
+        return;
+      }
+
+      console.log(`Creating ICS file with ${events.length} events`);
 
       createEvents(events, (error, value) => {
         if (error) {
           console.error('Error creating ICS file:', error);
-          reject(new Error('Failed to create calendar file'));
+          reject(new Error(`Failed to create calendar file: ${error.message || error}`));
+          return;
+        }
+
+        if (!value) {
+          reject(new Error('No ICS content generated'));
           return;
         }
 
@@ -129,12 +172,14 @@ export const exportToICS = (itinerary: Itinerary): Promise<void> => {
           const link = document.createElement('a');
           link.href = url;
           link.download = `${itinerary.destination.replace(/\s+/g, '-')}-${itinerary.tier}-itinerary.ics`;
+          link.style.display = 'none';
           document.body.appendChild(link);
           link.click();
 
           setTimeout(() => {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
+            console.log('ICS file downloaded successfully');
             resolve();
           }, 100);
         } catch (downloadError) {
@@ -142,9 +187,9 @@ export const exportToICS = (itinerary: Itinerary): Promise<void> => {
           reject(new Error('Failed to download calendar file'));
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in exportToICS:', error);
-      reject(new Error('Failed to export to calendar'));
+      reject(new Error(`Failed to export to calendar: ${error.message || error}`));
     }
   });
 };
