@@ -47,30 +47,24 @@ export default function PersonalizedDestinations() {
     setError('');
 
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/get-personalized-destinations`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('get-personalized-destinations', {
+        method: 'POST',
+      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch destinations');
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch destinations');
       }
 
-      const data = await response.json();
+      if (!data) {
+        throw new Error('No data returned from function');
+      }
+
       setDestinations(data.destinations);
       setProfile(data.profile);
     } catch (err: any) {
