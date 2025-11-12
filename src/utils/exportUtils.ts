@@ -96,132 +96,139 @@ const parseTimeToDate = (dayDate: string, timeString: string): Date => {
   return date;
 };
 
-export const exportToICS = (itinerary: Itinerary): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    try {
-      const events: EventAttributes[] = [];
+export const exportToICS = async (itinerary: Itinerary): Promise<void> => {
+  console.log('=== Starting ICS Export ===');
+  console.log('Destination:', itinerary.destination);
+  console.log('Days:', itinerary.days_json?.length);
 
-      console.log('Starting ICS export with', itinerary.days_json.length, 'days');
+  try {
+    if (!itinerary.days_json || itinerary.days_json.length === 0) {
+      throw new Error('No itinerary data available to export');
+    }
 
-      itinerary.days_json.forEach((day: Day) => {
-        day.activities.forEach((activity: Activity) => {
-          try {
-            const startDate = parseTimeToDate(day.date, activity.time);
-            const durationMinutes = parseDurationToMinutes(activity.duration);
-            const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+    const events: EventAttributes[] = [];
 
-            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-              console.warn(`Invalid date for activity: ${activity.name}`);
-              return;
-            }
-
-            const start: DateArray = [
-              startDate.getFullYear(),
-              startDate.getMonth() + 1,
-              startDate.getDate(),
-              startDate.getHours(),
-              startDate.getMinutes()
-            ];
-
-            const end: DateArray = [
-              endDate.getFullYear(),
-              endDate.getMonth() + 1,
-              endDate.getDate(),
-              endDate.getHours(),
-              endDate.getMinutes()
-            ];
-
-            events.push({
-              start,
-              end,
-              title: activity.name,
-              description: `${activity.description}\n\nCost: ₹${activity.cost}\nDuration: ${activity.duration}`,
-              location: `${activity.venue}, ${activity.location}`,
-              status: 'CONFIRMED',
-              busyStatus: 'BUSY',
-              organizer: { name: 'Fitinerary', email: 'noreply@fitinerary.com' }
-            });
-          } catch (activityError) {
-            console.warn(`Error processing activity ${activity.name}:`, activityError);
-          }
-        });
-      });
-
-      if (events.length === 0) {
-        reject(new Error('No valid events to export'));
-        return;
+    for (const day of itinerary.days_json) {
+      if (!day.activities || day.activities.length === 0) {
+        console.warn(`Day ${day.day} has no activities`);
+        continue;
       }
 
-      console.log(`Creating ICS file with ${events.length} events`);
+      for (const activity of day.activities) {
+        try {
+          if (!activity.name || !activity.time || !day.date) {
+            console.warn('Skipping activity with missing required fields:', activity);
+            continue;
+          }
 
+          const startDate = parseTimeToDate(day.date, activity.time);
+          const durationMinutes = parseDurationToMinutes(activity.duration || '1 hour');
+          const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+
+          if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            console.warn(`Invalid date for activity: ${activity.name}`);
+            continue;
+          }
+
+          const start: DateArray = [
+            startDate.getFullYear(),
+            startDate.getMonth() + 1,
+            startDate.getDate(),
+            startDate.getHours(),
+            startDate.getMinutes()
+          ];
+
+          const end: DateArray = [
+            endDate.getFullYear(),
+            endDate.getMonth() + 1,
+            endDate.getDate(),
+            endDate.getHours(),
+            endDate.getMinutes()
+          ];
+
+          const eventData: EventAttributes = {
+            start,
+            end,
+            title: activity.name,
+            description: activity.description ?
+              `${activity.description}\n\nCost: ₹${activity.cost || 0}\nDuration: ${activity.duration || 'N/A'}` :
+              `Cost: ₹${activity.cost || 0}\nDuration: ${activity.duration || 'N/A'}`,
+            location: activity.venue && activity.location ?
+              `${activity.venue}, ${activity.location}` :
+              (activity.venue || activity.location || 'Location TBD'),
+            status: 'CONFIRMED',
+            busyStatus: 'BUSY'
+          };
+
+          events.push(eventData);
+          console.log(`Added event: ${activity.name} on ${day.date} at ${activity.time}`);
+        } catch (activityError: any) {
+          console.error(`Error processing activity "${activity.name}":`, activityError);
+        }
+      }
+    }
+
+    if (events.length === 0) {
+      throw new Error('No valid events could be created from the itinerary');
+    }
+
+    console.log(`Total events created: ${events.length}`);
+    console.log('Creating ICS file...');
+
+    return new Promise<void>((resolve, reject) => {
       createEvents(events, (error, value) => {
         if (error) {
-          console.error('Error creating ICS file:', error);
-          reject(new Error(`Failed to create calendar file: ${error.message || error}`));
+          console.error('ICS creation error:', error);
+          reject(new Error(`Failed to create calendar file: ${error}`));
           return;
         }
 
-        if (!value) {
-          reject(new Error('No ICS content generated'));
+        if (!value || value.length === 0) {
+          console.error('No ICS content generated');
+          reject(new Error('Calendar file generation produced no content'));
           return;
         }
+
+        console.log('ICS content created, length:', value.length);
 
         try {
-          const blob = new Blob([value], { type: 'text/calendar;charset=utf-8' });
+          const blob = new Blob([value], {
+            type: 'text/calendar;charset=utf-8'
+          });
+
+          console.log('Blob created, size:', blob.size);
+
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
+
+          const sanitizedDestination = itinerary.destination.replace(/[^a-zA-Z0-9-_\s]/g, '').replace(/\s+/g, '-');
+          const fileName = `${sanitizedDestination}-${itinerary.tier}-itinerary.ics`;
+
           link.href = url;
-          link.download = `${itinerary.destination.replace(/\s+/g, '-')}-${itinerary.tier}-itinerary.ics`;
+          link.download = fileName;
           link.style.display = 'none';
+
           document.body.appendChild(link);
+
+          console.log('Triggering download for:', fileName);
           link.click();
 
           setTimeout(() => {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
-            console.log('ICS file downloaded successfully');
+            console.log('=== ICS Export Completed Successfully ===');
             resolve();
-          }, 100);
-        } catch (downloadError) {
-          console.error('Error downloading ICS file:', downloadError);
-          reject(new Error('Failed to download calendar file'));
+          }, 150);
+        } catch (downloadError: any) {
+          console.error('Download error:', downloadError);
+          reject(new Error(`Failed to download calendar file: ${downloadError.message}`));
         }
       });
-    } catch (error: any) {
-      console.error('Error in exportToICS:', error);
-      reject(new Error(`Failed to export to calendar: ${error.message || error}`));
-    }
-  });
-};
-
-const loadImageAsBase64 = async (url: string): Promise<string | null> => {
-  try {
-    const response = await fetch(url, {
-      mode: 'cors',
-      credentials: 'omit'
     });
-
-    if (!response.ok) {
-      console.warn(`Failed to fetch image: ${response.status}`);
-      return null;
-    }
-
-    const blob = await response.blob();
-
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        resolve(reader.result as string);
-      };
-      reader.onerror = () => {
-        console.warn('FileReader error');
-        resolve(null);
-      };
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.warn('Error loading image:', error);
-    return null;
+  } catch (error: any) {
+    console.error('=== ICS Export Failed ===');
+    console.error('Error:', error);
+    throw new Error(`Failed to export calendar: ${error.message || error}`);
   }
 };
 
